@@ -20,5 +20,5 @@
 @property(nonatomic,strong)NSString* dateTime;
 @property(nonatomic)int userfeedback;
 @property(nonatomic,strong)NSMutableArray* userIds;
-
+@property(nonatomic)int readStatus;
 @end

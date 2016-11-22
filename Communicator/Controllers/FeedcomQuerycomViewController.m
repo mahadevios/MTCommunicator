@@ -10,6 +10,10 @@
 #import "FeedOrQueryMessageHeader.h"
 #import "HomeViewController.h"
 #import "CreateNewFeedbackViewController.h"
+#import "NSString+HTML.h"
+#import "GTMNSString+HTML.h"
+
+
 @interface FeedcomQuerycomViewController ()
 
 @property (strong, nonatomic) UISearchController *searchController;
@@ -31,6 +35,87 @@
     [super viewDidLoad];
     [[self navigationController] setNavigationBarHidden:NO animated:YES];
     [self setSearchController];
+//    [[NSNotificationCenter defaultCenter] addObserver:self
+//                                             selector:@selector(reloadData) name:NOTIFICATION_UPDATE_TABLEVIEW
+//                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(reloadData) name:NOTIFICATION_NEW_DATA_UPDATE
+                                               object:nil];
+    //for web service response of load more data
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(insertNewData:) name:NOTIFICATION_50_NEW_FEEDBACK_RECORDS
+                                               object:nil];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(addFeedbackButton) name:NOTIFICATION_ADD_FEEDBACK_BUTTON
+                                               object:nil];
+    refreshControl = [[UIRefreshControl alloc]init];
+    refreshControl.tag=1000;
+    [self.tableView addSubview:refreshControl];
+    [refreshControl addTarget:self action:@selector(refreshTable) forControlEvents:UIControlEventValueChanged];
+
+}
+
+-(void)refreshTable
+{
+    NSString* username = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
+    NSString* password = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"];
+
+    NSString* companyId=[[Database shareddatabase] getCompanyId:username];
+//    NSString* userFeedback=[[Database shareddatabase] getUserIdFromUserName:username];
+    NSString* userFrom,*userTo;
+    if ([companyId isEqual:@"1"])
+    {
+        userFrom= [[Database shareddatabase] getAdminUserId];
+        username=[[Database shareddatabase] getUserNameFromCompanyname:[[NSUserDefaults standardUserDefaults]valueForKey:@"selectedCompany"]];
+        userTo=[[Database shareddatabase] getUserIdFromUserNameWithRoll1:username];
+        
+    }
+    
+    else
+    {
+        userTo=[[Database shareddatabase] getAdminUserId];
+        userFrom= [[Database shareddatabase] getUserIdFromUserNameWithRoll1:username];
+    }
+    
+   NSMutableArray* feedbackIDsArray= [[Database shareddatabase] getFeedbackIDs:self.feedbackType userFrom:userFrom userTo:userTo];
+    NSMutableString* feedIdsString;
+    
+    if (feedbackIDsArray.count==0)
+    {
+        feedIdsString=[@"0" mutableCopy];
+    }
+    for (int i=0; i<feedbackIDsArray.count; i++)
+    {
+        if (i==0)
+        {
+            feedIdsString=[feedbackIDsArray objectAtIndex:i];
+        }
+//        else
+//            if (i==feedbackIDsArray.count-1)
+//            {
+//                feedIdsString=[NSMutableString stringWithFormat:@"%@%@",feedIdsString,[feedbackIDsArray objectAtIndex:i]];
+//            }
+        else
+        {
+        feedIdsString=[NSMutableString stringWithFormat:@"%@,%@",feedIdsString,[feedbackIDsArray objectAtIndex:i]];
+        }
+    }
+    NSString* username1 = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
+
+  int feedbackType=  [[Database shareddatabase] getFeedbackIdFromFeedbackType:self.feedbackType];
+    [[APIManager sharedManager] getNew50Records:username1 password:password userFrom:userFrom userTo:userTo feedbackType:feedbackType feedbackIdsArray:feedIdsString];
+  // self.loading=false;
+
+    [self.tableView reloadData];
+}
+
+-(void)insertNewData:(NSNotification*)dict
+{
+    [[Database shareddatabase] getLoadMoreData:dict.object];
+
+    [refreshControl endRefreshing];
+   // [[self.view viewWithTag:1000] removeFromSuperview];
 }
 -(void)setSearchController
 {
@@ -47,10 +132,16 @@
 }
 -(void)viewWillAppear:(BOOL)animated
 {
+    [super viewWillAppear:YES];
+
     [self setNavigationBar];
     [self prepareForSearchBar];
-    
-//    
+    [self addFeedbackButton];
+       //[self.view bringSubviewToFront:addFeedbackButton];
+
+//    [[Database shareddatabase] setDatabaseToCompressAndShowTotalQueryOrFeedback:self.feedbackType];
+//    [self.tableView reloadData];
+//
 //    UIWindow *window2 = [[UIWindow alloc] initWithFrame:CGRectMake(self.view.bounds.size.width-60, self.view.bounds.size.height-100, 50, 50)];
 //    window2.backgroundColor = [UIColor redColor];
 //    window2.windowLevel = UIWindowLevelAlert;
@@ -58,17 +149,41 @@
 //    [window2 makeKeyAndVisible];
 }
 
+- (void) viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:YES];
+    [[[UIApplication sharedApplication].keyWindow viewWithTag:901] removeFromSuperview];
+}
+
+-(void)addFeedbackButton
+{
+    UIButton* addFeedbackButton=[[UIButton alloc]initWithFrame:CGRectMake(self.view.frame.origin.x+self.view.frame.size.width-50, self.view.frame.origin.y+self.view.frame.size.height-110, 40, 40)];
+    [addFeedbackButton setBackgroundImage:[UIImage imageNamed:@"NewFeedbackOrQuery"] forState:UIControlStateNormal];
+    addFeedbackButton.tag=901;
+    [addFeedbackButton addTarget:self action:@selector(addNewFeedbackView) forControlEvents:UIControlEventTouchUpInside];
+    [[UIApplication sharedApplication].keyWindow addSubview:addFeedbackButton];
+
+}
+
+-(void)reloadData
+{
+    [[Database shareddatabase] setDatabaseToCompressAndShowTotalQueryOrFeedback:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentFeedbackType"]];
+
+     [self prepareForSearchBar];
+    [self.tableView reloadData];
+}
+//-(void)reloadDataFor
 -(void)setNavigationBar
 {
-    self.tabBarController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"BackArrow"] style:UIBarButtonItemStylePlain target:self action:@selector(popViewController)] ;
-    self.tabBarController.navigationItem.rightBarButtonItem = nil;
-    self.tabBarController.navigationItem.leftBarButtonItem.tintColor=[UIColor whiteColor];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"BackArrow"] style:UIBarButtonItemStylePlain target:self action:@selector(popViewController)] ;
+    self.navigationItem.rightBarButtonItem = nil;
+    self.navigationItem.leftBarButtonItem.tintColor=[UIColor whiteColor];
    // Database *db=[Database shareddatabase];
     //NSString* username = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
    // NSString* companyId=[db getCompanyId:username];
 //    if ([[[NSUserDefaults standardUserDefaults] valueForKey:@"flag"] isEqual:@"0"])
 //    {
-        self.tabBarController.navigationItem.title = @"FeedCom";
+        self.navigationItem.title = self.feedbackType;
    // }
 //    
 //    if ([[[NSUserDefaults standardUserDefaults] valueForKey:@"flag"] isEqual:@"1"])
@@ -108,9 +223,8 @@
 }
 -(void)popViewController
 {
-    UINavigationController *navController = self.navigationController;
 
-    [navController popViewControllerAnimated:YES];
+    [self.navigationController popViewControllerAnimated:YES];
 }
 
 
@@ -124,7 +238,6 @@
         for (i=0,j=0; i<feedTypeSONoCopyForPredicate.count; i++,j=j+2)
         {
             Obj1= [feedTypeSONoCopyForPredicate objectAtIndex:i];
-            NSLog(@"%@",Obj1.soNumber);
             [feedTypeSONoArray insertObject:Obj1 atIndex:i];
             [self.tableView reloadData];
         }
@@ -171,22 +284,53 @@
         NSArray* separatedSO=[soNumber componentsSeparatedByString:@"#@"];
         UILabel* soNoLabel=(UILabel*)[cell viewWithTag:12];
         soNoLabel.text=[NSString stringWithFormat:@"SO No.%@ \nAvaya Id:%@ \nDocument Id:%@",[separatedSO objectAtIndex:0],[separatedSO objectAtIndex:1],[separatedSO objectAtIndex:2]];
-        UILabel* feedbackLabel=(UILabel*)[cell viewWithTag:15];
-        NSString *feedBackString =  [self stringByStrippingHTML:headerObj1.feedText];
-        feedbackLabel.text= feedBackString;
+        UIWebView* feedTextWebView=(UIWebView*)[cell viewWithTag:15];
+    //feedTextWebView.delegate=self;
+    feedTextWebView.backgroundColor=[UIColor clearColor];
+    [feedTextWebView setOpaque:NO];
+    feedTextWebView.scrollView.scrollEnabled = NO;
+    feedTextWebView.scrollView.bounces = NO;
+//        NSString *feedBackString =  [self stringByStrippingHTML:headerObj1.feedText];
+//        feedbackLabel.text= feedBackString;
+        NSString *feedBackString =  [headerObj1.feedText stringByDecodingHTMLEntities];
+        [feedTextWebView loadHTMLString:feedBackString baseURL:nil];
         NSArray *components1 = [headerObj1.feedDate componentsSeparatedByString:@"+"];
         NSArray* dateAndTimeArray= [components1[0] componentsSeparatedByString:@" "];
-        UILabel* dateAndTimeLabel=(UILabel*)[cell viewWithTag:13];
-        dateAndTimeLabel.text=[NSString stringWithFormat:@"%@ %@",dateAndTimeArray[0],dateAndTimeArray[1]];
+        UILabel* createdByLabel=(UILabel*)[cell viewWithTag:13];
+        createdByLabel.text=    [NSString stringWithFormat:@"Initiated by: %@ %@",headerObj1.firstname,headerObj1.lastname];
     
-        UILabel* createdByLabel=(UILabel*)[cell viewWithTag:16];
-        createdByLabel.text=[NSString stringWithFormat:@"Initiated by: %@ %@",headerObj1.firstname,headerObj1.lastname];
+        UILabel* dateAndTimeLabel=(UILabel*)[cell viewWithTag:16];
+    dateAndTimeLabel.numberOfLines=2;
+    dateAndTimeLabel.text=[NSString stringWithFormat:@"%@\n%@",dateAndTimeArray[0],dateAndTimeArray[1]];
+
 
         UILabel* closedByLabel=(UILabel*)[cell viewWithTag:17];
+    closedByLabel.text=    [NSString stringWithFormat:@"Closed by: %@ %@",headerObj1.firstname,headerObj1.lastname];
+
+    UIImageView* imageView= [cell viewWithTag:212];
+    if (imageView.image!=NULL)
+    {
+        imageView.image=NULL;
+    }
+    UIImageView* readStatusImageView= [cell viewWithTag:211];
+    if (headerObj1.readStatus>1 || headerObj1.readStatus==1)
+    {
+//        UIImageView* starImageView=[[UIImageView alloc]initWithFrame:readStatusImageView.frame];
+//        starImageView.tag=212;
+        readStatusImageView.image=[UIImage imageNamed:@"Star"];
+        //[cell addSubview:starImageView];
+      //  NSLog(@"");
+
+    }
+    else
+    {
+        readStatusImageView.image=NULL;
+
+    }
 
     if (headerObj1.statusId==2)
     {
-        closedByLabel.text=[NSString stringWithFormat:@"Closed by: %@ %@",headerObj1.firstname,headerObj1.lastname];
+       // closedByLabel.text=[NSString stringWithFormat:@"Closed by: %@ %@",headerObj1.firstname,headerObj1.lastname];
         //Database* db=[Database shareddatabase];
       // NSString* firstNameLastName =[db getClosedByUserName:headerObj1.feedbackType andsoNumber:headerObj1.soNumber];
     }
@@ -200,7 +344,7 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    return 90;
+    return 130;
     
 }
 
@@ -216,8 +360,9 @@
     [db getDetailMessagesofFeedbackOrQuery:feedType :SONumber];
     
    UIViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"DetailChatingViewController"];
+ //   UIViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"TestViewController"];
     
-   [self.navigationController pushViewController:vc animated:YES];
+   [self presentViewController:vc animated:YES completion:nil];
 
 }
 
@@ -237,13 +382,22 @@
 
 - (IBAction)buttonClicked:(id)sender
 {
-    UINavigationController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"CreateNewFeedbackNavigationController"];
-    NSArray* arr=   vc.childViewControllers;
-    CreateNewFeedbackViewController* vcc=   [arr objectAtIndex:0];
-    vcc.feedbackType=self.feedbackType;
-    [self.navigationController presentViewController:vc animated:YES completion:nil];
+//    CreateNewFeedbackViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"CreateNewFeedbackViewController"];
+//   // NSArray* arr=   vc.childViewControllers;
+//    //CreateNewFeedbackViewController* vcc=   [arr objectAtIndex:0];
+//    vc.feedbackType=self.feedbackType;
+//    [self.navigationController presentViewController:vc animated:YES completion:nil];
+    [self addNewFeedbackView];
 }
 
+-(void)addNewFeedbackView
+{
+    CreateNewFeedbackViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"CreateNewFeedbackViewController"];
+    // NSArray* arr=   vc.childViewControllers;
+    //CreateNewFeedbackViewController* vcc=   [arr objectAtIndex:0];
+    vc.feedbackType=self.feedbackType;
+    [self.navigationController presentViewController:vc animated:YES completion:nil];
+}
 -(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
 {
     //CGSize size = [UIScreen mainScreen].bounds.size;
@@ -260,4 +414,42 @@
 //
 //    }
    }
+//- (void)scrollViewDidScroll:(UIScrollView *)aScrollView
+//{
+//    CGPoint offset = aScrollView.contentOffset;
+//    CGRect bounds = aScrollView.bounds;
+//    CGSize size = aScrollView.contentSize;
+//    UIEdgeInsets inset = aScrollView.contentInset;
+//    float y = offset.y + bounds.size.height - inset.bottom;
+//    float h = size.height;
+//    // NSLog(@"offset: %f", offset.y);
+//    // NSLog(@"content.height: %f", size.height);
+//    // NSLog(@"bounds.height: %f", bounds.size.height);
+//    // NSLog(@"inset.top: %f", inset.top);
+//    // NSLog(@"inset.bottom: %f", inset.bottom);
+//    // NSLog(@"pos: %f of %f", y, h);
+//    
+//    float reload_distance = 10;
+//    if(y > h + reload_distance)
+//    {
+//        if (!self.loading)
+//        {
+//           self.loading=true;
+//            [self refreshTable];
+//            NSLog(@"load more rows");
+//
+//        }
+//    }
+//}
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
+{
+    float endScrolling = scrollView.contentOffset.y + scrollView.frame.size.height;
+    if (endScrolling >= scrollView.contentSize.height)
+    {
+        NSLog(@"Scroll End Called");
+        [self refreshTable];
+    
+    }
+}
 @end

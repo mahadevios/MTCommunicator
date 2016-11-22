@@ -22,13 +22,17 @@
 @synthesize attendiesTextview;
 @synthesize keyPointstextView;
 @synthesize insideView;
-@synthesize popupTableView;
-@synthesize attendeeButton;
+@synthesize popupTableView,hud;
+@synthesize attendeeButton,cellSelectedForEmailIds,emailITextViewds;
 
 - (void) viewDidLoad
 {
     [super viewDidLoad];
 self.cellSelected=[NSMutableArray new];
+    self.cellSelectedForEmailIds=[NSMutableArray new];
+
+    [self setNeedsStatusBarAppearanceUpdate];
+
     // Do any additional setup after loading the view.
 }
 
@@ -44,19 +48,26 @@ self.cellSelected=[NSMutableArray new];
     dateTextField.delegate=self;
     UIDatePicker *datePicker = [[UIDatePicker alloc]init];
     [datePicker setDatePickerMode:UIDatePickerModeDate];
-    [datePicker setDate:[[APIManager sharedManager] getDate]];
+    [datePicker setDate:[NSDate new]];
     [datePicker addTarget:self action:@selector(updateTextField:) forControlEvents:UIControlEventValueChanged];
     [dateTextField setInputView:datePicker];
     subjectTextField.delegate=self;
     attendiesTextview.delegate=self;
-    attendiesTextview.editable=NO;
+   // attendiesTextview.editable=NO;
+   // emailITextViewds.editable=NO;
     keyPointstextView.delegate=self;
     popupTableView.dataSource=self;
     popupTableView.delegate=self;
+    emailITextViewds.delegate=self;
     [popupTableView setHidden:YES];
     self.automaticallyAdjustsScrollViewInsets = NO;
 }
 
+
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    return UIStatusBarStyleLightContent;
+}
 -(void)updateTextField:(id)sender
 {
     UIDatePicker *picker = (UIDatePicker*)dateTextField.inputView;
@@ -65,12 +76,15 @@ self.cellSelected=[NSMutableArray new];
     NSString* date= [formatter stringFromDate:picker.date];
     dateTextField.text = [NSString stringWithFormat:@"%@",date];
 }
+-(void)viewWillDisappear:(BOOL)animated
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_ADD_MOM_BUTTON object:nil];
 
+}
 
 - (void)validateUserResponseForNewMOM:(NSNotification *)notification
 {
     
-    NSLog(@"got notification from server");
     if ([[notification.object objectForKey:@"code"] isEqualToString:SUCCESS])
     {
         gotResponse=TRUE;
@@ -87,6 +101,7 @@ self.cellSelected=[NSMutableArray new];
     NSUserDefaults* defaults=[NSUserDefaults standardUserDefaults];
     [defaults setObject:NULL forKey:@"userObject"];
     [defaults setObject:NULL forKey:@"selectedCompany"];
+    [defaults setValue:NULL forKey:@"selectedCompany"];
 
 }
 
@@ -94,11 +109,7 @@ self.cellSelected=[NSMutableArray new];
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
-- (IBAction)dismissViewController:(id)sender
-{
-    [self dismissViewControllerAnimated:self completion:nil];
-    
-}
+
 
 
 - (IBAction)sendNewMom:(id)sender
@@ -159,7 +170,7 @@ self.cellSelected=[NSMutableArray new];
                     // NSString* selectedCompany = [[NSUserDefaults standardUserDefaults]valueForKey:@"selectedCompany"];
                     if ([companyId isEqual:@"1"])
                     {
-                        userFrom=@"1";
+                        userFrom=[[Database shareddatabase] getAdminUserId];
                         username=[db getUserNameFromCompanyname:[[NSUserDefaults standardUserDefaults]valueForKey:@"selectedCompany"]];
                         userTo=[db getUserIdFromUserNameWithRoll1:username];
                         
@@ -172,7 +183,7 @@ self.cellSelected=[NSMutableArray new];
                     else
                     {
                         
-                        userTo=@"1";
+                        userTo=[[Database shareddatabase] getAdminUserId];
                         userFrom= [db getUserIdFromUserNameWithRoll1:username];
                      //userIdsArray=   [db getAllUsersOfCompany:@"1" andCompany:companyId];
 
@@ -189,29 +200,50 @@ self.cellSelected=[NSMutableArray new];
                     momObj.userFrom=[userFrom intValue];
                     momObj.userTo=[userTo intValue];
                     
-                    momObj.dateTime=[NSString stringWithFormat:@"%@",[[APIManager sharedManager] getDate]];
+                    momObj.dateTime=[[APIManager sharedManager] getDate];
                     NSArray* dt= [momObj.dateTime componentsSeparatedByString:@" "];
                     momObj.dateTime=[NSString stringWithFormat:@"%@"@" "@"%@",[dt objectAtIndex:0],[dt objectAtIndex:1]];
                    
                     momObj.userIds=[NSMutableArray arrayWithArray:userIdsArray];
-                    
-//                    NSMutableString* userIdsString=[[NSMutableString alloc]init];
-//                    for (int i=0; i<userIdsArray.count; i++)
-//                    {
-//                        userIdsString =[NSMutableString stringWithFormat:@"%@,%@",userIdsString,[userIdsArray objectAtIndex:i]];
-//                    }
-//                    NSLog(@"%@",userIdsString);
+                   // momObj.userIds=userIdsString;
 
-                    NSLog(@"%@,%@,%@,%@,%d,%d,%d,%@,%@",momObj.subject,momObj.momDate, momObj.attendee,momObj.keyPoints,momObj.userfeedback,momObj.userFrom,momObj.userTo,momObj.dateTime,momObj.userIds);
+                    NSMutableString* userIdsString=[[NSMutableString alloc]init];
+                    NSMutableString* userIdsEmailIdsString=[[NSMutableString alloc]init];
+
+                    for (int i=0; i<userIdsArray.count; i++)
+                    {
+                        if ([userIdsString isEqualToString:@""])
+                        {
+                            userIdsString =[NSMutableString stringWithFormat:@"%@",[userIdsArray objectAtIndex:i]];
+
+                        }
+                        else
+                        userIdsString =[NSMutableString stringWithFormat:@"%@,%@",userIdsString,[userIdsArray objectAtIndex:i]];
+                    }
+                    for (int i=0; i<userIdsEmailArray.count; i++)
+                    {
+                        if ([userIdsEmailIdsString isEqualToString:@""])
+                        {
+                            userIdsEmailIdsString =[NSMutableString stringWithFormat:@"%@",[userIdsEmailArray objectAtIndex:i]];
+                            
+                        }
+                        else
+                            userIdsEmailIdsString =[NSMutableString stringWithFormat:@"%@,%@",userIdsEmailIdsString,[userIdsEmailArray objectAtIndex:i]];
+                    }
+
                     
                     
                     NSArray* keys=[NSArray arrayWithObjects:@"subject",@"createdDate",@"attendee",@"keyPoints",@"userFrom",@"userTo",@"userFeedback",@"submittedDateTime",@"momId",@"userIds",nil];
                    
-                    NSArray* values=@[momObj.subject,momObj.momDate, momObj.attendee,momObj.keyPoints,[NSString stringWithFormat:@"%d",momObj.userFrom],[NSString stringWithFormat:@"%d",momObj.userTo],[NSString stringWithFormat:@"%d",momObj.userfeedback],momObj.dateTime,[NSString stringWithFormat:@"%ld",momObj.Id],[NSString stringWithFormat:@"%@",momObj.userIds]];
+                    NSArray* values=@[momObj.subject,momObj.momDate, momObj.attendee,momObj.keyPoints,[NSString stringWithFormat:@"%d",momObj.userFrom],[NSString stringWithFormat:@"%d",momObj.userTo],[NSString stringWithFormat:@"%d",momObj.userfeedback],momObj.dateTime,[NSString stringWithFormat:@"%ld",momObj.Id],[NSString stringWithFormat:@"%@",userIdsEmailIdsString]];
                     
                     NSDictionary* dic=[NSDictionary dictionaryWithObjects:values forKeys:keys];
-                    NSLog(@"%@",[dic valueForKey:@"userFeedback"]);
-                    NSLog(@"%@",[[NSUserDefaults standardUserDefaults] valueForKey:@"flag"]);
+                    
+                    NSError* err;
+                    NSData * jsonData = [NSJSONSerialization dataWithJSONObject:dic options:0 error:&err];
+                    NSString * myString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+
+                   
                     [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
                     [[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"];
                     
@@ -225,7 +257,8 @@ self.cellSelected=[NSMutableArray new];
                         
                         dic=[NSDictionary dictionaryWithObjects:values forKeys:keys];
                         [db insertNewMOM:dic];
-                        gotResponse=FALSE;
+                                          gotResponse=FALSE;
+                        [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
                         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Alert"
                                                                                                  message:@"MOM generated successfully"
                                                                                           preferredStyle:UIAlertControllerStyleAlert];
@@ -242,9 +275,15 @@ self.cellSelected=[NSMutableArray new];
                         
                     }
                     else
-                    [[APIManager sharedManager] sendNewMOM:dic username:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] password:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
+                    {
+                        hud = [MBProgressHUD showHUDAddedTo:[UIApplication sharedApplication].keyWindow animated:YES];
+                        hud.tag=789;
+                        hud.label.text = @"Sending...";
+                        hud.detailsLabel.text=@" Please wait";
+                        hud.minSize = CGSizeMake(150.f, 100.f);
+                    [[APIManager sharedManager] sendNewMOM:myString username:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] password:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
                     
-                    
+                    }
                     
                 }
                 else
@@ -298,7 +337,7 @@ self.cellSelected=[NSMutableArray new];
     
     if (textField==dateTextField)
     {
-        [self moveViewUp:YES];
+        //[self moveViewUp:YES];
     }
     
     
@@ -334,7 +373,7 @@ self.cellSelected=[NSMutableArray new];
         else
         {
             [textView resignFirstResponder];
-            [self moveViewUp:NO];
+           // [self moveViewUp:NO];
         }
         // Return FALSE so that the final '\n' character doesn't get added
         return NO;
@@ -354,10 +393,9 @@ self.cellSelected=[NSMutableArray new];
     else
     {
         [textView resignFirstResponder];
-        [self moveViewUp:NO];
+        //[self moveViewUp:NO];
 
     }
-    NSLog(@"%ld",(long)[[UIDevice currentDevice] orientation]);
     
 }
 
@@ -365,33 +403,80 @@ self.cellSelected=[NSMutableArray new];
 {
     if (textView==attendiesTextview)
     {
+        [self.tableView reloadData];
+        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"attendies"];
+        [popupTableView setHidden:NO];
+        self.scrollView.userInteractionEnabled = NO;
         
+        
+        // self.scrollView.alpha = 0.3f;
+        [self.view addSubview:popupTableView];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // make some UI changes
+            // ...
+            // show actionSheet for example
+            [dateTextField resignFirstResponder];
+            [emailITextViewds resignFirstResponder];
+            
+            [keyPointstextView resignFirstResponder];
+            [subjectTextField resignFirstResponder];
+            [attendiesTextview resignFirstResponder];
+            
+        });
     }
-    else
-    [self moveViewUp:YES];
-}
-
-
-
-- (void) moveViewUp: (BOOL) isUp
-{
-    const int movementDistance = 70; // tweak as needed
-    const float movementDuration = 0.3f; // tweak as needed
    
-    //    if (!isUp)
-    //    {
-    //        movementDistance=totalMovement;
-    //        totalMovement=0;
-    //    }
+    if (textView==emailITextViewds)
+    {
+        [self.tableView reloadData];
+        
+        [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"attendies"];
+        [popupTableView setHidden:NO];
+        self.scrollView.userInteractionEnabled = NO;
+        [self.view addSubview:popupTableView];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // make some UI changes
+            // ...
+            // show actionSheet for example
+            [dateTextField resignFirstResponder];
+            [emailITextViewds resignFirstResponder];
+            [attendiesTextview resignFirstResponder];
+            [keyPointstextView resignFirstResponder];
+            [subjectTextField resignFirstResponder];
+
+            
+        });
+
+        // self.scrollView.alpha = 0.3f;
+
+    }
     
-    movement = (isUp ? -movementDistance : movementDistance);
     
-    [UIView beginAnimations: @"anim" context: nil];
-    [UIView setAnimationBeginsFromCurrentState: YES];
-    [UIView setAnimationDuration: movementDuration];
-    insideView.frame = CGRectOffset(insideView.frame, 0, movement);
-    [UIView commitAnimations];
+    
+    //[self moveViewUp:YES];
 }
+
+
+//
+//- (void) moveViewUp: (BOOL) isUp
+//{
+//    const int movementDistance = 70; // tweak as needed
+//    const float movementDuration = 0.3f; // tweak as needed
+//   
+//    //    if (!isUp)
+//    //    {
+//    //        movementDistance=totalMovement;
+//    //        totalMovement=0;
+//    //    }
+//    
+//    movement = (isUp ? -movementDistance : movementDistance);
+//    
+//    [UIView beginAnimations: @"anim" context: nil];
+//    [UIView setAnimationBeginsFromCurrentState: YES];
+//    [UIView setAnimationDuration: movementDuration];
+//    insideView.frame = CGRectOffset(insideView.frame, 0, movement);
+//    [UIView commitAnimations];
+//}
 
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -429,6 +514,8 @@ self.cellSelected=[NSMutableArray new];
 
 -(void)setAttendeeList:(UIButton*)doneButton
 {
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"attendies"])
+    {
     self.scrollView.userInteractionEnabled = YES;
     
     
@@ -459,10 +546,49 @@ self.cellSelected=[NSMutableArray new];
     {
         attendiesTextview.text=@"";
     }
+        
+    }
+    
+    else
+    {
+        self.scrollView.userInteractionEnabled = YES;
+        
+        
+        
+        userIdsEmailArray=[NSMutableArray new];
+        userEmailNamesArray=[NSMutableArray new];
+        for (int i=0; i<self.cellSelectedForEmailIds.count; i++)
+        {
+            NSString* k=[self.cellSelectedForEmailIds objectAtIndex:i];
+            User* userobject= [userObjectsArrayForEmailIds objectAtIndex:[k intValue]];
+            [userEmailNamesArray addObject:[NSString stringWithFormat:@"%@ %@",userobject.firstName,userobject.lastName]];
+            [userIdsEmailArray addObject:[NSString stringWithFormat:@"%d",userobject.Id]];
+            
+        }
+        
+        [popupTableView setHidden:YES];
+        for (j=0; j<userEmailNamesArray.count; j++)
+        {
+            if (j==0)
+            {
+                emailITextViewds.text=[userEmailNamesArray objectAtIndex:j];
+                
+            }
+            else
+                emailITextViewds.text=[NSString stringWithFormat:@"%@,%@",emailITextViewds.text,[userEmailNamesArray objectAtIndex:j]];
+        }
+        if (userEmailNamesArray.count==0)
+        {
+            emailITextViewds.text=@"";
+        }
+
+    }
 }
 
 -(void)cancelAttendeeList:(UIButton*)sender
 {
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"attendies"])
+    {
    self.cellSelected=nil;
     self.attendiesTextview.text=nil;
     userIdsArray=nil;
@@ -473,7 +599,22 @@ self.cellSelected=[NSMutableArray new];
 //    userIdsArray=nil;
     self.scrollView.userInteractionEnabled = YES;
     [popupTableView setHidden:YES];
+    }
+    
+    else
+    {
+        self.cellSelectedForEmailIds=nil;
+        self.emailITextViewds.text=nil;
+        userIdsEmailArray=nil;
+        userEmailNamesArray=nil;
+        self.cellSelectedForEmailIds=[[NSMutableArray alloc]init];
+        [self.tableView reloadData];
+        //    userNamesArray=nil;
+        //    userIdsArray=nil;
+        self.scrollView.userInteractionEnabled = YES;
+        [popupTableView setHidden:YES];
 
+    }
 }
 
 
@@ -485,7 +626,24 @@ self.cellSelected=[NSMutableArray new];
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
     Database* db=[Database shareddatabase];
-    userObjectsArray= [db getAllUsersFirstnameLastname];
+    NSString* username = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
+    NSString* companyId=[[Database shareddatabase] getCompanyId:username];
+    NSString* companyId1;
+    NSString* selectedCompany;
+    if ([companyId isEqual:@"1"])
+    {
+        selectedCompany= [[NSUserDefaults standardUserDefaults] valueForKey:@"selectedCompany"];
+        companyId1= [[Database shareddatabase] getCompanyIdFromCompanyName1:selectedCompany];
+    }
+    else
+    {
+        companyId1=@"1";
+    }
+
+    //NSString* companyId= [db getCompanyId:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUsername"]];
+    userObjectsArray= [db getAllUsersFirstnameLastname:companyId company2:companyId1];
+    userObjectsArrayForEmailIds=[db getAllUsersFirstnameLastname:companyId company2:companyId1];
+
             return userObjectsArray.count;
 }
 
@@ -493,6 +651,9 @@ self.cellSelected=[NSMutableArray new];
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"attendies"])
+    {
+    
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
     if ([self.cellSelected containsObject:[NSString stringWithFormat:@"%ld",indexPath.row]])
     {
@@ -509,11 +670,39 @@ self.cellSelected=[NSMutableArray new];
    
     User* userObject= [userObjectsArray objectAtIndex:indexPath.row];
     attendeeNameLabel.text=[NSString stringWithFormat:@"%@ %@",userObject.firstName,userObject.lastName];
-          return cell;
+        return cell;
+
+        
+    }
+    else
+    {
+        
+            UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
+            if ([self.cellSelectedForEmailIds containsObject:[NSString stringWithFormat:@"%ld",indexPath.row]])
+            {
+                cell.accessoryType = UITableViewCellAccessoryCheckmark;
+            }
+            else
+            {
+                cell.accessoryType = UITableViewCellAccessoryNone;
+                
+            }
+            cell.tag=indexPath.row;
+            UILabel* attendeeNameLabel= [cell viewWithTag:97];
+            
+            
+            User* userObject= [userObjectsArrayForEmailIds objectAtIndex:indexPath.row];
+            attendeeNameLabel.text=[NSString stringWithFormat:@"%@ %@",userObject.firstName,userObject.lastName];
+            return cell;
+            
+            
+      
+    }
 }
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell *selectedCell = [tableView cellForRowAtIndexPath:indexPath];
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"attendies"])
+    {
     if ([self.cellSelected containsObject:[NSString stringWithFormat:@"%ld",indexPath.row]])
     {
         
@@ -522,6 +711,20 @@ self.cellSelected=[NSMutableArray new];
     else
     {
         [self.cellSelected addObject:[NSString stringWithFormat:@"%ld",indexPath.row]];
+    }
+    }
+    else
+    {
+        if ([self.cellSelectedForEmailIds containsObject:[NSString stringWithFormat:@"%ld",indexPath.row]])
+        {
+            
+            [self.cellSelectedForEmailIds removeObject:[NSString stringWithFormat:@"%ld",indexPath.row]];
+        }
+        else
+        {
+            [self.cellSelectedForEmailIds addObject:[NSString stringWithFormat:@"%ld",indexPath.row]];
+        }
+
     }
     [self.tableView reloadData];
     
@@ -556,6 +759,8 @@ self.cellSelected=[NSMutableArray new];
 
 - (IBAction)addAttendees:(id)sender
 {
+    [self.tableView reloadData];
+    [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"attendies"];
     [dateTextField resignFirstResponder];
     [popupTableView setHidden:NO];
     self.scrollView.userInteractionEnabled = NO;
@@ -564,5 +769,24 @@ self.cellSelected=[NSMutableArray new];
    // self.scrollView.alpha = 0.3f;
     [self.view addSubview:popupTableView];
    // self.scrollView.backgroundColor = [UIColor grayColor];
+}
+- (IBAction)backButtonPressed:(id)sender
+{
+    
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (IBAction)addEmailIds:(id)sender
+{
+    [self.tableView reloadData];
+
+    [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"attendies"];
+    [dateTextField resignFirstResponder];
+    [popupTableView setHidden:NO];
+    self.scrollView.userInteractionEnabled = NO;
+    
+    
+    // self.scrollView.alpha = 0.3f;
+    [self.view addSubview:popupTableView];
 }
 @end

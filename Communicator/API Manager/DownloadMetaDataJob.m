@@ -13,7 +13,7 @@
 /*================================================================================================================================================*/
 
 @implementation DownloadMetaDataJob
-@synthesize downLoadEntityJobName;
+@synthesize downLoadEntityJobName,hud;
 @synthesize requestParameter;
 @synthesize downLoadResourcePath;
 @synthesize downLoadJobDelegate;
@@ -46,7 +46,7 @@
 
 -(void)startMetaDataDownLoad
 {
-    //[self sendRequestWithResourcePath:downLoadResourcePath withRequestParameter:requestParameter withJobName:downLoadEntityJobName withMethodType:httpMethod];
+        //[self sendRequestWithResourcePath:downLoadResourcePath withRequestParameter:requestParameter withJobName:downLoadEntityJobName withMethodType:httpMethod];
     [self sendNewRequestWithResourcePath:downLoadResourcePath withRequestParameter:requestParameter withJobName:downLoadEntityJobName withMethodType:httpMethod];
 }
 //-(void)startCounterDownLoad
@@ -245,7 +245,6 @@
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
     
-    NSLog(@"%@",data);
     
 	[responseData appendData:data];
 }
@@ -270,12 +269,13 @@
 //        [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:[self shortErrorFromError:error] withCancelText:nil withOkText:@"Ok" withAlertTag:1000];
 //        
 //    }
-    
+    [hud hideAnimated:YES];
+
     if ([self.downLoadEntityJobName isEqualToString:NEW_USER_LOGIN_API])
     {
         //        AppDelegate *appDelegate = (AppDelegate *) [[UIApplication sharedApplication] delegate];
         //        [appDelegate hideIndefiniteProgressView];
-        
+        [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
         [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:[self shortErrorFromError:error] withCancelText:nil withOkText:@"Ok" withAlertTag:1000];
         
     }
@@ -284,16 +284,37 @@
     {
         //        AppDelegate *appDelegate = (AppDelegate *) [[UIApplication sharedApplication] delegate];
         //        [appDelegate hideIndefiniteProgressView];
+        [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
+
+        [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:[self shortErrorFromError:error] withCancelText:nil withOkText:@"Ok" withAlertTag:1000];
+        
+    }
+    if ([self.downLoadEntityJobName isEqualToString:LOGOUT_API])
+    {
+        //        AppDelegate *appDelegate = (AppDelegate *) [[UIApplication sharedApplication] delegate];
+        //        [appDelegate hideIndefiniteProgressView];
+        [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
         
         [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:[self shortErrorFromError:error] withCancelText:nil withOkText:@"Ok" withAlertTag:1000];
         
     }
-    
+
+    if ([self.downLoadEntityJobName isEqualToString:FORGOT_PASSWORD_API])
+    {
+        //        AppDelegate *appDelegate = (AppDelegate *) [[UIApplication sharedApplication] delegate];
+        //        [appDelegate hideIndefiniteProgressView];
+        [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
+        
+        [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:[self shortErrorFromError:error] withCancelText:nil withOkText:@"Ok" withAlertTag:1000];
+        
+    }
+
     if ([self.downLoadEntityJobName isEqualToString:GET_LATEST_RECORDS])
     {
         //        AppDelegate *appDelegate = (AppDelegate *) [[UIApplication sharedApplication] delegate];
         //        [appDelegate hideIndefiniteProgressView];
-        
+        [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
+
         [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:[self shortErrorFromError:error] withCancelText:nil withOkText:@"Ok" withAlertTag:1000];
         
     }
@@ -328,7 +349,8 @@
     {
         //        AppDelegate *appDelegate = (AppDelegate *) [[UIApplication sharedApplication] delegate];
         //        [appDelegate hideIndefiniteProgressView];
-        
+        [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
+
         [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:[self shortErrorFromError:error] withCancelText:nil withOkText:@"Ok" withAlertTag:1000];
         
     }
@@ -336,7 +358,8 @@
     {
         //        AppDelegate *appDelegate = (AppDelegate *) [[UIApplication sharedApplication] delegate];
         //        [appDelegate hideIndefiniteProgressView];
-        
+        [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
+
         [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:[self shortErrorFromError:error] withCancelText:nil withOkText:@"Ok" withAlertTag:1000];
         
     }
@@ -399,15 +422,68 @@
                 
             }else
             {
+                [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
+
                 [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"username or password is incorrect, please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
             }
         }else
         {
+            [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
             [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
         }
     }
     
     
+    if ([self.downLoadEntityJobName isEqualToString:UPDATE_DEVICE_TOKEN])
+    {
+        
+        if (response != nil)
+        {
+            
+            if ([[response objectForKey:@"code"] isEqualToString:SUCCESS])
+            {
+                
+                [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_UPDATE_DEVICE_TOKEN object:response];
+                
+                
+            }else
+            {
+              //  [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
+                
+              //  [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"username or password is incorrect, please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+            }
+        }else
+        {
+            //[[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
+            //[[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+        }
+    }
+
+    if ([self.downLoadEntityJobName isEqualToString:FORGOT_PASSWORD_API])
+    {
+        
+        if (response != nil)
+        {
+            
+            if ([[response objectForKey:@"code"] isEqualToString:SUCCESS])
+            {
+                
+                [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_FORGOT_PASSWORD_API object:response];
+                
+                
+            }else
+            {
+                //  [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
+                
+                  [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"" withMessage:@"Incorrect email id" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+            }
+        }else
+        {
+            //[[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
+            //[[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+        }
+    }
+
     
     
     if ([self.downLoadEntityJobName isEqualToString:FIND_COUNT_API])
@@ -535,6 +611,8 @@
             }
         }else
         {
+            [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
+
             [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
         }
     }
@@ -556,6 +634,8 @@
             }
         }else
         {
+            [[[UIApplication sharedApplication].keyWindow viewWithTag:789] removeFromSuperview];
+
             [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
         }
     }
@@ -581,6 +661,197 @@
         }
     }
 
+    
+    if ([self.downLoadEntityJobName isEqualToString:GET_NOTIFICATION_DATA])
+    {
+        
+        if (response != nil)
+        {
+            
+            if ([[response objectForKey:@"code"] isEqualToString:SUCCESS])
+            {
+                [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_GET_NOTIFICATION_DATA object:response];
+                
+                
+            }else
+            {
+                [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"username or password is incorrect, please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+            }
+        }else
+        {
+            [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+        }
+    }
+    
+    if ([self.downLoadEntityJobName isEqualToString:GET_ALL_MSGS_LOAD_MORE_DATA1])
+    {
+        
+        if (response != nil)
+        {
+            
+            if ([[response objectForKey:@"code"] isEqualToString:SUCCESS])
+            {
+                [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_GET_ALL_MSGS_LOAD_MORE_DATA object:response];
+                
+                
+            }else
+            {
+                [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"username or password is incorrect, please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+            }
+        }else
+        {
+            [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+        }
+    }
+
+
+    if ([self.downLoadEntityJobName isEqualToString:GET_50_NEW_FEEDBACK_RECORDS])
+    {
+        
+        if (response != nil)
+        {
+            
+            if ([[response objectForKey:@"code"] isEqualToString:SUCCESS])
+            {
+                [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_50_NEW_FEEDBACK_RECORDS object:response];
+                
+                
+            }else
+            {
+                [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"username or password is incorrect, please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+            }
+        }else
+        {
+            [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+        }
+    }
+
+    
+    if ([self.downLoadEntityJobName isEqualToString:GET_REPORT_NOTI_DATA])
+    {
+        
+        if (response != nil)
+        {
+            
+            if ([[response objectForKey:@"code"] isEqualToString:SUCCESS])
+            {
+                [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_REPORT_NOTI_DATA object:response];
+                
+                
+            }else
+            {
+                [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"username or password is incorrect, please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+            }
+        }else
+        {
+            [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+        }
+    }
+
+    if ([self.downLoadEntityJobName isEqualToString:GET_DOCS_NOTI_DATA])
+    {
+        
+        if (response != nil)
+        {
+            
+            if ([[response objectForKey:@"code"] isEqualToString:SUCCESS])
+            {
+                [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_DOCS_NOTI_DATA object:response];
+                
+                
+            }else
+            {
+                [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"username or password is incorrect, please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+            }
+        }else
+        {
+            [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+        }
+    }
+
+    if ([self.downLoadEntityJobName isEqualToString:GET_MOM_NOTI_DATA])
+    {
+        
+        if (response != nil)
+        {
+            
+            if ([[response objectForKey:@"code"] isEqualToString:SUCCESS])
+            {
+                [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_MOM_NOTI_DATA object:response];
+                
+                
+            }else
+            {
+                [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"username or password is incorrect, please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+            }
+        }else
+        {
+            [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+        }
+    }
+    
+    if ([self.downLoadEntityJobName isEqualToString:GET_50_MOM_LOAD_MORE_DATA])
+    {
+        
+        if (response != nil)
+        {
+            
+            if ([[response objectForKey:@"code"] isEqualToString:SUCCESS])
+            {
+                [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_MOM_LOAD_MORE_DATA object:response];
+                
+                
+            }else
+            {
+                [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"username or password is incorrect, please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+            }
+        }else
+        {
+            [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+        }
+    }
+
+    if ([self.downLoadEntityJobName isEqualToString:GET_50_REPORT_LOAD_MORE_DATA])
+    {
+        
+        if (response != nil)
+        {
+            
+            if ([[response objectForKey:@"code"] isEqualToString:SUCCESS])
+            {
+                [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_REPORT_LOAD_MORE_DATA object:response];
+                
+                
+            }else
+            {
+                [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"username or password is incorrect, please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+            }
+        }else
+        {
+            [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+        }
+    }
+    if ([self.downLoadEntityJobName isEqualToString:GET_50_DOCUMENT_LOAD_MORE_DATA])
+    {
+        
+        if (response != nil)
+        {
+            
+            if ([[response objectForKey:@"code"] isEqualToString:SUCCESS])
+            {
+                [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_DOCUMENT_LOAD_MORE_DATA object:response];
+                
+                
+            }else
+            {
+                [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"username or password is incorrect, please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+            }
+        }else
+        {
+            [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+        }
+    }
+    
 
 }
 

@@ -13,8 +13,12 @@
     BOOL gotResponse;
     int movement,j;
     NSMutableArray* userObjectsArray;
+    NSMutableArray* userObjectsArrayForEmailIds;
+
     NSMutableDictionary* isSelectedDict;
     NSMutableArray* userIdsArray;
+    NSMutableArray* userIdsEmailArray;
+    NSMutableArray* userEmailNamesArray;
     NSMutableArray* userNamesArray;
 }
 - (IBAction)sendNewMom:(id)sender;
@@ -29,6 +33,12 @@
 @property (weak, nonatomic) IBOutlet UITableView *popupTableView;
 @property (weak, nonatomic) IBOutlet UIButton *attendeeButton;
 @property (nonatomic,strong)NSMutableArray* cellSelected;
+@property (nonatomic,strong)NSMutableArray* cellSelectedForEmailIds;
+@property (weak, nonatomic) MBProgressHUD *hud;
+
 - (IBAction)addAttendees:(id)sender;
 @property (weak, nonatomic) IBOutlet UIScrollView *scrollView;
+- (IBAction)backButtonPressed:(id)sender;
+- (IBAction)addEmailIds:(id)sender;
+@property (weak, nonatomic) IBOutlet UITextView *emailITextViewds;
 @end

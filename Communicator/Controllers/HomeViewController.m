@@ -15,6 +15,8 @@
 #import "UIColor+CommunicatorColor.h"
 #import "FeedcomQuerycomViewController.h"
 #import "CounterGraph.h"
+#import "CompanyNamesViewController.h"
+#import "MainMOMViewController.h"
 
 @interface HomeViewController ()
 @property (strong, nonatomic) UISearchController *searchController;
@@ -35,7 +37,7 @@
 @synthesize tableView;
 - (void)viewDidLoad
 {
-    [super viewDidLoad];
+    [super viewDidLoad];//meand view did load in memory
    // [self setSelectedButton:feedComButton];
 
    // [self createSWRevealView];
@@ -43,31 +45,66 @@
     [self feedbackAndQuerySearch];
     
         labelArray=[[NSMutableArray alloc]init];
-
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(reloadData) name:NOTIFICATION_NEW_DATA_UPDATE
+                                               object:nil];
+    [self reloadData];
+     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"SignOut"] style:UIBarButtonItemStylePlain target:self action:@selector(popViewController1)] ;
+    
    }
 -(void)viewWillAppear:(BOOL)animated
 {
-   self.tabBarController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"SignOut"] style:UIBarButtonItemStylePlain target:self action:@selector(popViewController1)] ;
-    self.tabBarController.navigationItem.title = @"Dashboard";
-    [self.navigationItem setHidesBackButton:NO];
+   //self.tabBarController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"SignOut"] style:UIBarButtonItemStylePlain target:self action:@selector(popViewController1)] ;
+//    self.navigationController.navigationItem.title = @"Dashboard";
+    self.navigationController.navigationBar.backgroundColor = [UIColor communicatorColor];
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
     self.navigationController.navigationBar.barTintColor = [UIColor communicatorColor];
-    self.tabBarController.navigationItem.leftBarButtonItem.tintColor=[UIColor whiteColor];
-    self.tabBarController.navigationItem.rightBarButtonItem=nil;
-   
+    [self.navigationController.navigationBar setBarStyle:UIStatusBarStyleLightContent];// to set carrier,time and battery color in white color
 
-    [tableView reloadData];
+    
+    
+//    [self.navigationItem setHidesBackButton:NO];
+//    self.navigationController.navigationBar.barTintColor = [UIColor communicatorColor];
+//    self.tabBarController.navigationItem.leftBarButtonItem.tintColor=[UIColor whiteColor];
+//    self.tabBarController.navigationItem.rightBarButtonItem=nil;
+//    self.navigationController.navigationBar.tintColor=[UIColor whiteColor];
+
+       [tableView reloadData];
     
    
 }
 
+-(void)reloadData
+{
+    NSString* username = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
+    NSString* companyId=[[Database shareddatabase] getCompanyId:username];
+    NSString* selectedCompany;
+    if ([companyId isEqual:@"1"])
+    {
+        selectedCompany= [[NSUserDefaults standardUserDefaults] valueForKey:@"selectedCompany"];
+        //companyId= [[Database shareddatabase] getCompanyIdFromCompanyName1:selectedCompany];
+    }
+    else
+    {
+       selectedCompany= [[Database shareddatabase] getCompanyIdFromCompanyName:companyId];
+    }
+
+    [[Database shareddatabase] getFeedbackAndQueryCounterForCompany:selectedCompany];
+    [self feedbackAndQuerySearch];
+    [tableView reloadData];
+
+}
 -(void)popViewController1
 {
-    UINavigationController *navController = self.navigationController;
-    UIViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"LoginNaviagationController"];
-    [navController presentViewController:vc animated:YES completion:nil];
+    [[AppPreferences sharedAppPreferences] logout];
+
     NSUserDefaults* defaults=[NSUserDefaults standardUserDefaults];
     [defaults setObject:NULL forKey:@"userObject"];
     [defaults setObject:NULL forKey:@"selectedCompany"];
+    UINavigationController *navController = self.navigationController;
+    UIViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"LoginViewController"];
+    [navController presentViewController:vc animated:YES completion:nil];
+    
 
 }
 
@@ -75,7 +112,6 @@
 
 -(void)flipview:id
 {
-    NSLog(@"tapped");
     UIViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"ComposeFeedbackOrQueryViewController"];
     
     //[self.navigationController pushViewController:vc animated:YES];
@@ -106,13 +142,11 @@
     app.samplefeedTypeCopyForPredicate=[[NSMutableArray alloc]init];
     
     FeedQueryCounter *ft2=[[FeedQueryCounter alloc]init];
-     NSLog(@"%ld",app.feedQueryCounterDictsWithTypeArray.count);
     
     for (int i=0; i<app.feedQueryCounterDictsWithTypeArray.count; i++)
     {
         
         ft2= [app.feedQueryCounterDictsWithTypeArray objectAtIndex:i];
-        NSLog(@"%@",ft2.feedbackType);
         
         [app.sampleFeedtypeArray insertObject:ft2 atIndex:i];
         //[app.sampleFeedtypeArray insertObject:ft2.feedbackType atIndex:i];
@@ -147,7 +181,6 @@
         for (i=0; i<app.feedQueryCounterDictsWithTypeArray.count; i++)
         {
             ft2= [app.feedQueryCounterDictsWithTypeArray objectAtIndex:i];
-            NSLog(@"%@",ft2.feedbackType);
             [app.sampleFeedtypeArray insertObject:ft2 atIndex:i];
 
             [self.tableView reloadData];
@@ -184,9 +217,7 @@
    
     UITableViewCell *cell = [tableview dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
     referenceViewForCounterGraph=[cell viewWithTag:112];
-    NSLog(@"%d",indexPath.row);
 
-    NSLog(@"%@",cell);
 
     UILabel* feedbackAndQueryTypeLabel=(UILabel*)[cell viewWithTag:12];
     FeedQueryCounter* feedCounterObj = [app.sampleFeedtypeArray objectAtIndex:indexPath.row];
@@ -196,33 +227,47 @@
     totalCounter = feedCounterObj.totalCounter;
     closedCounter=feedCounterObj.closedCounter;
 
-    UILabel* countLabel=(UILabel*)[cell viewWithTag:113];
-    if (counter>12)
+   UIImageView* imageView= [cell viewWithTag:211];
+    if (imageView.image!=NULL)
     {
-        countLabel.text=@"12+";
+        imageView.image=NULL;
     }
-    else
-    countLabel.text=[NSString stringWithFormat:@"%ld", counter];
+    UIImageView* readStatusImageView= [cell viewWithTag:211];
+    if (feedCounterObj.readStatus==1)
+    {
+        //UIImageView* starImageView=[[UIImageView alloc]initWithFrame:readStatusImageView.frame];
+        //starImageView.tag=212;
+        readStatusImageView.image=[UIImage imageNamed:@"Star"];
+        //[cell addSubview:starImageView];
+    }
+    UILabel* countLabel=(UILabel*)[cell viewWithTag:113];
+//    if (counter>12)
+//    {
+//        countLabel.text=@"12+";
+//    }
+    //else
+    countLabel.text=[NSString stringWithFormat:@"%ld", totalCounter];
    
     counterGraphLabel=[cell viewWithTag:111];
-
+    //counterGraphLabel.textColor=[UIColor clearColor];
        
-    if (counter>6)
+    if (totalCounter>20)
     {
-        counterGraphLabel.text=@"6+";
+        counterGraphLabel.text=@"20+";
+        countLabel.text=@"20+";
     }
     else
-    counterGraphLabel.text=[NSString stringWithFormat:@"%ld",totalCounter];
+    counterGraphLabel.text=[NSString stringWithFormat:@"%ld",counter];
     counterGraphLabel.backgroundColor = [UIColor communicatorColor];
     counterGraphLabel.textColor = [UIColor communicatorColor];
     
     counterGraphLabel1=[cell viewWithTag:120];
-    if (closedCounter>6)
+    if (closedCounter>20)
     {
-        counterGraphLabel.text=@"6+";
+        counterGraphLabel.text=@"20+";
     }
     else
-    counterGraphLabel1.text=[NSString stringWithFormat:@"%ld",totalCounter];
+    counterGraphLabel1.text=[NSString stringWithFormat:@"%ld",closedCounter];
     counterGraphLabel1.backgroundColor = [UIColor redColor];
     counterGraphLabel1.textColor = [UIColor redColor];
     
@@ -259,16 +304,23 @@
                          //counterGraphLabel.text=[NSString stringWithFormat:@"%ld",counter];
                          //counterGraphObj.count=7;
                          //counterGraphObj.count1=10;
-                         long activeCountermaxWidth=counterGraphObj.count*10;
-                         long closedCountermaxWidth=counterGraphObj.count1*10;
+                         long activeCountermaxWidth=counterGraphObj.count*5;//openCount
+                         long closedCountermaxWidth=counterGraphObj.count1*5;//closeCount
 
-                         if ((counterGraphObj.count * 10+counterGraphObj.count * 10)>120)
+                         if ((counterGraphObj.count * 5+counterGraphObj.count1 * 5)>100)
                          {
-                            activeCountermaxWidth= ((counterGraphObj.count * 10.0)/ (counterGraphObj.count * 10+counterGraphObj.count1 * 10))*120;
-                            closedCountermaxWidth= ((counterGraphObj.count1 * 10.0)/ (counterGraphObj.count * 10+counterGraphObj.count1 * 10))*120;
+                            activeCountermaxWidth= ((counterGraphObj.count * 5.0)/ (counterGraphObj.count * 5+counterGraphObj.count1 * 5))*100;
+                            closedCountermaxWidth= ((counterGraphObj.count1 * 5.0)/ (counterGraphObj.count * 5+counterGraphObj.count1 * 5))*100;
                              NSLog(@"a=%ld c=%ld",activeCountermaxWidth,closedCountermaxWidth);
 
                          }
+//                         if ((counterGraphObj.count * 5)>100)
+//                         {
+//                             activeCountermaxWidth= 100;
+//                             //closedCountermaxWidth= ((counterGraphObj.count1 * 10.0)/ (counterGraphObj.count * 10+counterGraphObj.count1 * 10))*120;
+//                             
+//                         }
+                         
     [counterGraphObj.counterGraphlabel setFrame:CGRectMake(counterGraphObj.counterGraphlabel.frame.origin.x, counterGraphObj.counterGraphlabel.frame.origin.y, activeCountermaxWidth, counterGraphObj.counterGraphlabel.frame.size.height)];
                          
                          [counterGraphObj.counterGraphlabel1 setFrame:CGRectMake(counterGraphObj.counterGraphlabel.frame.origin.x+activeCountermaxWidth, counterGraphObj.counterGraphlabel1.frame.origin.y, closedCountermaxWidth, counterGraphObj.counterGraphlabel1.frame.size.height)];
@@ -303,11 +355,14 @@
 
     Database *db=[Database shareddatabase];
     [db setDatabaseToCompressAndShowTotalQueryOrFeedback:feedbackTypeLabel.text];
-    
+    //CompanyNamesViewController* vc1= [self.storyboard instantiateViewControllerWithIdentifier:@"CompanyNamesViewController"];
+
     FeedcomQuerycomViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"FeedcomQuerycomViewController"];
     FeedQueryCounter* obj=[app.sampleFeedtypeArray objectAtIndex:indexPath.row];
     vc.feedbackType=obj.feedbackType;
-
+    [[NSUserDefaults standardUserDefaults] setValue:feedbackTypeLabel.text forKey:@"currentFeedbackType"];
+    
+    
   [self.navigationController pushViewController:vc animated:YES];
 }
 

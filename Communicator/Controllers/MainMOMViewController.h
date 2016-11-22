@@ -9,6 +9,9 @@
 #import <UIKit/UIKit.h>
 
 @interface MainMOMViewController : UIViewController<UISearchBarDelegate,UISearchResultsUpdating>
+{
+    UIRefreshControl* refreshControl;
+}
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 
 @end

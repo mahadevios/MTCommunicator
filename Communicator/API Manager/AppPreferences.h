@@ -22,6 +22,10 @@
 @property (nonatomic)           int     currentSelectedItem;
 
 @property (nonatomic,assign)    BOOL                        isReachable;
+//@property(nonatomic,strong)  NSString* currentUsername;
+//@property(nonatomic,strong)  NSString* currentPassword;
+
+@property(nonatomic,strong)  NSString* firebaseInstanceId;
 
 @property (nonatomic,strong)NSMutableArray* feedQueryCounterArray;
 @property (nonatomic,strong)NSMutableArray* feedQueryMessageHeaderArray;
@@ -38,15 +42,21 @@
 
 @property (nonatomic,strong)NSMutableArray* sampleFeedtypeArray;
 @property (nonatomic,strong)NSMutableArray* samplefeedTypeCopyForPredicate;
+@property (nonatomic,strong)NSMutableArray* sampleMOMArray;
+@property (nonatomic,strong)NSMutableArray* samplefMOMCopyForPredicate;
 
 @property (nonatomic,strong)NSMutableDictionary* sampleReportDateDict;
 @property (nonatomic,strong)NSMutableDictionary* sampleReportDateCopyForPredicate;
 
 @property (nonatomic,strong)NSMutableArray* allMomArray;
 @property (nonatomic,strong)NSMutableDictionary* reportFileNamesDict;
+@property (nonatomic,strong)NSMutableDictionary* reportFileNamesDictCopy;
+
 @property(nonatomic,strong)NSMutableArray* imageFilesArray;
 @property(nonatomic,strong)NSMutableArray* imageFileNamesArray;
 @property(nonatomic,strong)NSMutableArray* uploadedFileNamesArray;
+@property(nonatomic,strong)NSString* deviceToken;
+@property(nonatomic,strong)NSString* fileLocation;
 
 
 +(AppPreferences *) sharedAppPreferences;
@@ -55,6 +65,10 @@
 -(void) showNoInternetMessage;
 
 -(void) startReachabilityNotifier;
+
+-(void)logout;
+
+-(void)refreshAllViewData;
 @end
 
 

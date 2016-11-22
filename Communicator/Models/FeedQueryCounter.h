@@ -14,5 +14,5 @@
 @property(nonatomic)long openCounter;
 @property(nonatomic)int closedCounter;
 @property(nonatomic)long totalCounter;
-
+@property(nonatomic)int readStatus;
 @end

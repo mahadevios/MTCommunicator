@@ -34,48 +34,129 @@
 //-(void)insertQueryData:(NSDictionary*)dic;
 //-(void)updateData:(NSString*)data;
 
--(void)getDetailMessagesofFeedbackOrQuery:(int)feedType :(NSString*)SONumber;
--(void)validateUserFromLocalDatabase:(NSString*)usernameString :(NSString*)passwordString;
--(void)setDatabaseToCompressAndShowTotalQueryOrFeedback:(NSString*)feedbackType;
 
 
 //-------new methods--------//
+//login web data insertion
 -(void)insertCompanyRelatedFeedbackTypeAndUsers:(NSDictionary*)companyRelatedFeedbackAndUsersDict;
--(void)insertFeedQueryCounter:(NSDictionary*)dic;
--(NSMutableArray*)findPermittedCompaniesForUsername:(NSString*)usernameString Password:(NSString*)passwordString;
--(void)getFeedbackAndQueryCounterForCompany:(NSString*)companyName;
--(User*)getUserUsername:(NSString*)username andPassword:(NSString*)pass;
--(NSString*)getCompanyIdFromCompanyName:(NSString*)CompanyId;
--(void)insertLatestRecordsForFeedcom:(NSDictionary*)dic;
--(void)insertLatestRecordsForMOM:(NSDictionary*)dic;
--(NSString*)getUserNameFromCompanyname:(NSString*)username;
--(NSString*)getCompanyId:(NSString*)username;
--(NSString*)getUserIdFromUserNameWithRoll1:(NSString*)username;
--(NSString*)getUserIdFromUserName:(NSString*)username;
--(NSString*)getUserNameFromUserId:(int)userId;
--(NSString*)getuserNameFromCompanyId:(NSString*)companyId;
--(NSMutableArray*)getMaxFeedIdAndCounter:(NSString*)soNumber :(int)feedtype;
--(NSMutableArray*)getFeedTypeIdAndMaxCounter:(NSString*)feedbackType;
--(NSMutableArray*)getAllUsersOfCompany:(NSString*)companyId andCompany:(NSString*)companyId1;
--(NSString*)getClosedByUserName:(int)feedbackType andsoNumber:(NSString*)soNumber;
--(NSMutableDictionary*)getAllOperaotorUsernames;
--(NSString*)getCompanyIdFromCompanyName1:(NSString*)CompanyName;
--(NSMutableArray*)getAllUsersFirstnameLastname;
 
--(long)getFeedbackCounterFromSONumberAndFeedbackType:(NSString*)sonumber :(int)feedtype;
--(void)insertUpdatedRecordsForFeedcom:(NSDictionary*)recordDict;
--(void)insertUpdatedRecordsForQueryCom:(NSDictionary*)recordDict;
--(void)insertNewFeedback:(NSDictionary*)responseDict;
--(void)insertNewQuery:(NSDictionary*)responseDict;
--(void)insertNewMOM:(NSDictionary*)responseDict;
+-(void)insertFeedQueryCounter:(NSDictionary*)dic;
+
+-(void)getFeedbackAndQueryCounterForCompany:(NSString*)companyName;
+
+-(void)insertLatestRecordsForFeedcom:(NSDictionary*)dic;
+
+-(void)insertLatestRecordsForMOM:(NSDictionary*)dic;
 
 -(void)insertReportData:(NSDictionary *)notificationData;
+
 -(void)insertDocumentsData:(NSDictionary *)notificationData;
 
--(void)insertUserReply:(Feedback*)feedObj;
--(void)setMOMView;
--(void)setReportView;
--(void)setDocumentView;
-//-(NSMutableArray*)uniqueUserIdArray;
+//data fetch for local  use
 
+-(void)getDetailMessagesofFeedbackOrQuery:(int)feedType :(NSString*)SONumber;
+
+//local user validation
+-(BOOL)validateUserFromLocalDatabase:(NSString*)usernameString :(NSString*)passwordString;
+
+//for home view
+-(void)setDatabaseToCompressAndShowTotalQueryOrFeedback:(NSString*)feedbackType;
+
+-(NSMutableArray*)findPermittedCompaniesForUsername:(NSString*)usernameString Password:(NSString*)passwordString;
+
+-(User*)getUserUsername:(NSString*)username andPassword:(NSString*)pass;
+
+-(NSString*)getCompanyIdFromCompanyName:(NSString*)CompanyId;
+
+-(NSString*)getUserNameFromCompanyname:(NSString*)username;
+
+-(NSString*)getCompanyId:(NSString*)username;
+
+-(NSString*)getUserIdFromUserNameWithRoll1:(NSString*)username;
+
+-(NSString*)getUserIdFromUserName:(NSString*)username;
+
+-(NSString*)getUserNameFromUserId:(int)userId;
+
+-(NSString*)getuserNameFromCompanyId:(NSString*)companyId;
+
+-(NSMutableArray*)getMaxFeedIdAndCounter:(NSString*)soNumber :(int)feedtype;
+
+-(NSMutableArray*)getFeedTypeIdAndMaxCounter:(NSString*)feedbackType;
+
+-(NSMutableArray*)getAllUsersOfCompany:(NSString*)companyId andCompany:(NSString*)companyId1;
+
+-(NSString*)getClosedByUserName:(int)feedbackType andsoNumber:(NSString*)soNumber;
+
+-(NSMutableDictionary*)getAllOperaotorUsernames;
+
+-(NSString*)getCompanyIdFromCompanyName1:(NSString*)CompanyName;
+
+-(NSMutableArray*)getAllUsersFirstnameLastname:(NSString*)company1 company2:(NSString *)company2;
+
+-(int)getFeedbackIdFromFeedbackType:(NSString*)feedbackType;
+
+-(long)getFeedbackCounterFromSONumberAndFeedbackType:(NSString*)sonumber :(int)feedtype;
+
+-(NSString*)getFirstnameLastnameFromUserId:(int)userID;
+
+-(NSString*)getAdminUserId;
+//local data insertion(self generated messages)
+-(void)insertUpdatedRecordsForFeedcom:(NSDictionary*)recordDict;
+
+-(void)insertNewFeedback:(NSDictionary*)oneMessageDict :(NSDictionary*)responseDict;
+
+-(void)insertNewQuery:(NSDictionary*)responseDict;
+
+-(void)insertNewMOM:(NSDictionary*)responseDict;
+
+-(void)insertNewReportData:(NSDictionary* )notificationData;
+
+-(void)insertNewDocumentData:(NSDictionary* )notificationData;
+
+-(void)updateMom:(int)momId;
+
+
+//set views
+
+-(void)setMOMView;
+
+-(void)setReportView;
+
+-(void)setDocumentView;
+
+//for logout
+-(void)removeUserdata;
+
+//set read status after reading the message
+-(void)updateReadStatus:(NSString*)SONumber feedbackType:(NSString*)feedbackType;
+
+//provide user ids to server to get data
+-(NSMutableArray*)getFeedbackIDs:(NSString*)feedbackType userFrom:(NSString*)userFrom userTo:(NSString*)userTo;
+
+-(NSMutableArray*)getMOMIds:(NSString*)userFrom userTo:(NSString*)userTo;
+
+-(NSMutableArray*)getDocumentIds:(NSString*)userFrom userTo:(NSString*)userTo;
+
+-(NSMutableArray*)getReportIds:(NSString*)userFrom userTo:(NSString*)userTo;
+
+//load more data of resoective feedback type
+-(void)getLoadMoreData:(NSDictionary*)notificationData;
+
+-(void)insertLoadMoreMOMNotificationData:(NSDictionary*)notificationData;
+
+-(void)insertLoadMoreReportNotificationData:(NSDictionary*)notificationData;
+
+-(void)insertLoadMoreDocumentNotificationData:(NSDictionary*)notificationData;
+
+//noti data insertion
+-(void)insertFeedcomNotifiationData:(NSDictionary*)notificationDict readStatusflag:(BOOL) readStatusflag;
+
+-(void)insertReportNotificationData:(NSDictionary *)notificationData;
+
+-(void)insertDocumentNotificationData:(NSDictionary *)notificationData;
+
+-(void)insertMOMNotificationData:(NSDictionary *)notificationData;
+//-(void)insertUserReply:(Feedback*)feedObj;
+//-(void)validateUser:(NSString*)usernameString Password:(NSString *)passwordString andDeviceId:(NSString *)DeviceId
 @end

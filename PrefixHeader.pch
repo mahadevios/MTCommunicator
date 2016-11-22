@@ -16,5 +16,5 @@
 #import "MBProgressHUD.h"
 #import "AppPreferences.h"
 #import "APIManager.h"
-
+#import "Database.h"
 #endif /* PrefixHeader_pch */

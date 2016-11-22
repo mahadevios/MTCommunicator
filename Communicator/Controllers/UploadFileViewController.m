@@ -25,7 +25,7 @@ enum {
 //    uint8_t                     _buffer[kSendBufferSize];
 //}
 
-@synthesize rightBarButton;
+@synthesize rightBarButton,hud;
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -36,6 +36,9 @@ enum {
     if (app.imageFilesArray.count==0) {
         rightBarButton.title=@"";
     }
+    [self setNeedsStatusBarAppearanceUpdate];
+    
+    
     // Do any additional setup after loading the view.
 }
 
@@ -45,26 +48,22 @@ enum {
     // Dispose of any resources that can be recreated.
 }
 
-- (void)viewWillDisappear:(BOOL)animated; // Called when the view is dismissed, covered or otherwise hidden. Default does nothing
-{
-    [super viewWillDisappear:YES];
-    
-    
-}
-
-- (void)viewDidDisappear:(BOOL)animated;  // Called after the view was dismissed, covered or otherwise hidden. Default does nothing
-{
-    [super viewDidDisappear:YES];
-    
-}
 
 -(void)viewWillAppear:(BOOL)animated
 {
     self.navigationController.navigationBar.barTintColor = [UIColor communicatorColor];
     [self.navigationController.navigationBar setBarStyle:UIStatusBarStyleLightContent];//
-    
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"BackArrow"] style:UIBarButtonItemStylePlain target:self action:@selector(popViewController)] ;
-    
+    [[self.view viewWithTag:11] setHidden:YES];
+    [[self.view viewWithTag:12] setHidden:YES];
+    [[self.view viewWithTag:101] setHidden:YES];
+
+    UILabel* fileNameLabel=[self.view viewWithTag:110];
+    if ([AppPreferences sharedAppPreferences].imageFileNamesArray.count>0)
+    {
+        fileNameLabel.text=[[AppPreferences sharedAppPreferences].imageFileNamesArray objectAtIndex:0];
+    }
+    [[[UIApplication sharedApplication].keyWindow viewWithTag:901] removeFromSuperview];
+
 //    self.tabBarController.navigationItem.title = @"Upload Files";
 
    // self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@""] style:UIBarButtonItemStylePlain target:self action:nil] ;
@@ -75,18 +74,208 @@ enum {
     
     
    // [self.tabBarController.tabBar setHidden:YES];
-    self.navigationItem.title = @"Upload Files";
+    self.navigationItem.title = @"Upload files";
     
     self.navigationItem.leftBarButtonItem.tintColor=[UIColor whiteColor];
     
 
 
 }
-
--(void)popViewController
+- (UIStatusBarStyle)preferredStatusBarStyle
 {
-    [self.navigationController popViewControllerAnimated:YES];
+    return UIStatusBarStyleLightContent;
 }
+
+- (IBAction)disMissViewController:(id)sender
+{
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+- (IBAction)uploadFileButtonClciked:(id)sender
+{
+    alertController = [UIAlertController alertControllerWithTitle:@""
+                                                          message:@"Are you sure to upload this file?"
+                                                   preferredStyle:UIAlertControllerStyleAlert];
+    actionDelete = [UIAlertAction actionWithTitle:@"Yes"
+                                            style:UIAlertActionStyleDefault
+                                          handler:^(UIAlertAction * action)
+                    {
+                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                            //Do background work
+                            
+                            if ([self.presentingViewController isKindOfClass:[UITabBarController class]])
+                            {
+                                UITabBarController* vc= self.presentingViewController;
+                                //        long a=vc.selectedIndex;
+                                NSString* username = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
+                                NSString* companyId=[[Database shareddatabase] getCompanyId:username];
+                                NSString* userFeedback=[[Database shareddatabase] getUserIdFromUserName:username];
+                                NSString *userFrom,*userTo;
+                                if ([companyId isEqual:@"1"])
+                                {
+                                    userFrom= [[Database shareddatabase] getAdminUserId];
+                                    username=[[Database shareddatabase] getUserNameFromCompanyname:[[NSUserDefaults standardUserDefaults]valueForKey:@"selectedCompany"]];
+                                    userTo=[[Database shareddatabase] getUserIdFromUserNameWithRoll1:username];
+                                    
+                                }
+                                
+                                else
+                                {
+                                    
+                                    userTo=[[Database shareddatabase] getAdminUserId];
+                                    userFrom= [[Database shareddatabase] getUserIdFromUserNameWithRoll1:username];
+                                    
+                                    
+                                }
+                                NSString* flag= [[NSUserDefaults standardUserDefaults]valueForKey:@"flag1"];
+                                if ([flag isEqualToString:@"0"])
+                                {
+                                    flag=@"1";
+                                }
+                                else
+                                {
+                                    flag=@"2";
+                                    
+                                }
+                                NSDictionary* dic=[NSDictionary dictionaryWithObjectsAndKeys:userFrom,@"userFrom",userTo,@"userTo",userFeedback,@"userFeedback" ,nil];
+                                [[APIManager sharedManager] uploadFileOfReportOrDocument:dic flag:flag];
+                                
+                                
+                                
+                            }
+                            else
+                            {
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    // make some UI changes
+                                    // ...
+                                    hud = [MBProgressHUD showHUDAddedTo:[UIApplication sharedApplication].keyWindow animated:YES];
+                                    //hud = [MBProgressHUD new];
+
+                                    [[UIApplication sharedApplication].keyWindow addSubview:hud];
+                                    hud.tag=1122;
+                                    hud.label.text = @"Uploading...";
+                                    hud.detailsLabel.text=@" Please wait";
+                                    hud.minSize = CGSizeMake(150.f, 100.f);
+                                                                   });
+
+                                
+                                [[APIManager sharedManager] uploadFileToServer];
+                            }                           //[self uploadFileToServer:@""];
+                            
+                            //[self startSend:@""];
+                        });
+                        [self dismissViewControllerAnimated:YES completion:nil];
+                        
+                        
+                    }]; //You can use a block here to handle a press on this button
+    [alertController addAction:actionDelete];
+    
+    
+    actionCancel = [UIAlertAction actionWithTitle:@"No"
+                                            style:UIAlertActionStyleCancel
+                                          handler:^(UIAlertAction * action)
+                    {
+                        [alertController dismissViewControllerAnimated:YES completion:nil];
+                        
+                    }]; //You can use a block here to handle a press on this button
+    [alertController addAction:actionCancel];
+    
+    [self presentViewController:alertController animated:YES completion:nil];
+}
+
+//- (IBAction)uploadFile:(id)sender
+//{
+//  
+//
+//    alertController = [UIAlertController alertControllerWithTitle:@""
+//                                                          message:@"Are you sure to upload this file?"
+//                                                   preferredStyle:UIAlertControllerStyleAlert];
+//    actionDelete = [UIAlertAction actionWithTitle:@"Yes"
+//                                            style:UIAlertActionStyleDefault
+//                                          handler:^(UIAlertAction * action)
+//                    {
+//                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+//                            //Do background work
+//                            
+//                            if ([self.presentingViewController isKindOfClass:[UITabBarController class]])
+//                            {
+//                                UITabBarController* vc= self.presentingViewController;
+//                                //        long a=vc.selectedIndex;
+//                                NSString* username = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
+//                                NSString* companyId=[[Database shareddatabase] getCompanyId:username];
+//                                NSString* userFeedback=[[Database shareddatabase] getUserIdFromUserName:username];
+//                                NSString *userFrom,*userTo;
+//                                if ([companyId isEqual:@"1"])
+//                                {
+//                                    userFrom= [[Database shareddatabase] getAdminUserId];
+//                                    username=[[Database shareddatabase] getUserNameFromCompanyname:[[NSUserDefaults standardUserDefaults]valueForKey:@"selectedCompany"]];
+//                                    userTo=[[Database shareddatabase] getUserIdFromUserNameWithRoll1:username];
+//                                    
+//                                }
+//                                
+//                                else
+//                                {
+//                                    
+//                                    userTo=[[Database shareddatabase] getAdminUserId];
+//                                    userFrom= [[Database shareddatabase] getUserIdFromUserNameWithRoll1:username];
+//                                    
+//                                    
+//                                }
+//                               NSString* flag= [[NSUserDefaults standardUserDefaults]valueForKey:@"flag1"];
+//                                if ([flag isEqualToString:@"0"])
+//                                {
+//                                    flag=@"1";
+//                                }
+//                                else
+//                                {
+//                                    flag=@"2";
+//
+//                                }
+//                                NSDictionary* dic=[NSDictionary dictionaryWithObjectsAndKeys:userFrom,@"userFrom",userTo,@"userTo",userFeedback,@"userFeedback" ,nil];
+//                                [[APIManager sharedManager] uploadFileOfReportOrDocument:dic flag:flag];
+//
+//                                
+//                                
+//                            }
+//                            else
+//                            {
+//                                [[APIManager sharedManager] uploadFileToServer];
+//                            }                           //[self uploadFileToServer:@""];
+//
+//                            //[self startSend:@""];
+//                        });
+//                        [self dismissViewControllerAnimated:YES completion:nil];
+//
+//                        
+//                    }]; //You can use a block here to handle a press on this button
+//    [alertController addAction:actionDelete];
+//    
+//    
+//    actionCancel = [UIAlertAction actionWithTitle:@"No"
+//                                            style:UIAlertActionStyleCancel
+//                                          handler:^(UIAlertAction * action)
+//                    {
+//                        [alertController dismissViewControllerAnimated:YES completion:nil];
+//                        
+//                    }]; //You can use a block here to handle a press on this button
+//    [alertController addAction:actionCancel];
+//    
+//    [self presentViewController:alertController animated:YES completion:nil];
+// 
+//}
+
+- (IBAction)deleteButtonClicked:(id)sender
+{
+    UIButton *button = (UIButton *) sender;
+    UIImageView* selectedImageView=[self.view viewWithTag:100];
+    [[self.view viewWithTag:101] setHidden:YES];
+    selectedImageView.image=nil;
+    [[self.view viewWithTag:11] setHidden:YES];
+    [[self.view viewWithTag:12] setHidden:YES];
+
+//    [app.imageFilesArray removeObjectAtIndex:button.tag];
+
+}
+
 /*
 #pragma mark - Navigation
 
@@ -102,11 +291,37 @@ enum {
     
      UIImage *chosenImage = info[UIImagePickerControllerOriginalImage];
      AppPreferences* app=[AppPreferences sharedAppPreferences];
-    [app.imageFileNamesArray addObject:@"12345.png"];
-    [app.imageFilesArray addObject:chosenImage];
-    [self.collectionView reloadData];
+    [app.imageFileNamesArray removeAllObjects];
+    [app.imageFilesArray removeAllObjects];
+    UIImageView* selectedImageView=[self.view viewWithTag:100];
+   // selectedImageView.image=chosenImage;
+    //[self.collectionView reloadData];
     [picker.view removeFromSuperview] ;
     [picker removeFromParentViewController] ;
+    [[self.view viewWithTag:11] setHidden:NO];
+    [[self.view viewWithTag:12] setHidden:NO];
+    [[self.view viewWithTag:101] setHidden:NO];
+
+    NSURL *refURL = [info valueForKey:UIImagePickerControllerReferenceURL];
+    
+    // define the block to call when we get the asset based on the url (below)
+    ALAssetsLibraryAssetForURLResultBlock resultblock = ^(ALAsset *imageAsset)
+    {
+        ALAssetRepresentation *imageRep = [imageAsset defaultRepresentation];
+        UILabel* selectedImageNameLabel=[self.view viewWithTag:110];
+        selectedImageNameLabel.text=[imageRep filename];
+        NSLog(@"[imageRep filename] : %@", [imageRep filename]);
+        
+        [app.imageFileNamesArray addObject:[imageRep filename]];
+        selectedImageNameLabel.text=[app.imageFileNamesArray objectAtIndex:0];
+        [app.imageFilesArray addObject:chosenImage];
+        [AppPreferences sharedAppPreferences].fileLocation=@"Gallery";
+    };
+    
+    // get the asset library and fetch the asset based on the ref url (pass in block above)
+    ALAssetsLibrary* assetslibrary = [[ALAssetsLibrary alloc] init];
+    [assetslibrary assetForURL:refURL resultBlock:resultblock failureBlock:nil];
+    
  /*   ALAssetsLibraryAssetForURLResultBlock resultblock = ^(ALAsset *myasset)
     {
         ALAssetRepresentation *representation = [myasset defaultRepresentation];
@@ -163,7 +378,9 @@ enum {
 
 - (IBAction)selectFileFromStorage:(id)sender
 {
+    UIViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"DocumentDirectoryContentViewController"];
     
+    [self presentViewController:vc animated:YES completion:nil];
 }
 
 
@@ -224,7 +441,6 @@ UIImageView* img=(UIImageView*)[cell viewWithTag:100];
    // [imageview addSubview:mybutton];
    // cell.backgroundView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"AppIcon"]];
     //[self.collectionView indexPathForRowAtPoint:]
-    NSLog(@"%@",cell.backgroundColor);
          return cell;
     
 }
@@ -246,10 +462,11 @@ UIImageView* img=(UIImageView*)[cell viewWithTag:100];
 {
     UIButton *button = (UIButton *) sender;
     AppPreferences* app=[AppPreferences sharedAppPreferences];
-
+    UIImageView* selectedImageView=[self.view viewWithTag:100];
+    selectedImageView.image=nil;
            [app.imageFilesArray removeObjectAtIndex:button.tag];
 
-    [self.collectionView reloadData];
+   // [self.collectionView reloadData];
 }
 
 
@@ -279,13 +496,15 @@ UIImageView* img=(UIImageView*)[cell viewWithTag:100];
    NSString* fileName = [app.imageFileNamesArray objectAtIndex:i];
 
 
-     NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", @"http://192.168.3.170:8080/coreflex/feedcom", @"uploadFileFromMobile"]];
+     //NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", @"http://192.168.3.170:8080/coreflex/feedcom", @"uploadFileFromMobile"]];
     
    // NSString *folderpath=[NSHomeDirectory() stringByAppendingPathComponent:@"Documents/Downloads/test.png"];
 
 //"http://115.249.195.23:8080/Communicator/feedcom/
    // NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", @"http://localhost:9090/coreflex/feedcom", @"uploadFileFromMobile"]];
-       // NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", @"http://115.249.195.23:8080/Communicator/feedcom/", @"uploadFileFromMobile"]];
+        NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", BASE_URL_PATH, @"uploadFileFromMobile"]];
+
+     //   NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", @"http://115.249.195.23:8080/Communicator/feedcom", @"uploadFileFromMobile"]];
 
 
     NSString *boundary = [self generateBoundaryString];
@@ -331,7 +550,6 @@ UIImageView* img=(UIImageView*)[cell viewWithTag:100];
         uploadedFileNameString = [uploadedFileNameString stringByReplacingOccurrencesOfString:@"\"" withString:@""];
 
      [app.uploadedFileNamesArray addObject:[result valueForKey:@"fileName"]];//add the uploaded file names to uploaded file names array to display on detail chating view controller
-                     NSLog(@"result = %@", result);
         
         NSString* returnCode= [result valueForKey:@"code"];
        
@@ -352,7 +570,7 @@ UIImageView* img=(UIImageView*)[cell viewWithTag:100];
                                            //self.navigationItem.rightBarButtonItem.title=nil;
                                            
                                            [self.collectionView reloadData];
-                                           [self popViewController];
+                                           [self dismissViewControllerAnimated:YES completion:nil];
                                        }]; //You can use a block here to handle a press on this button
             [alertController addAction:actionOk];
             [self presentViewController:alertController animated:YES completion:nil];
@@ -433,19 +651,6 @@ UIImageView* img=(UIImageView*)[cell viewWithTag:100];
 
 
 
-- (IBAction)barbuttonClicked:(id)sender
-{
-    NSLog(@"in bar button");
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        //Do background work
-        
-        //[self uploadFileToServer:@""];
-       //[self startSend:@""];
-           });
-    
-
-    
-}
 
 
 //---------for FTP use only-----------------//

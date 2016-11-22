@@ -11,7 +11,9 @@
 @interface UploadFileViewController : UIViewController<UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 {
     NSDictionary* result;
-
+    UIAlertController *alertController;
+    UIAlertAction *actionDelete;
+    UIAlertAction *actionCancel;
 
 }
 - (IBAction)selectFileFromGallery:(id)sender;
@@ -34,5 +36,8 @@
 @property (nonatomic, assign, readonly ) uint8_t *         buffer;
 @property (nonatomic, assign, readwrite) size_t            bufferOffset;
 @property (nonatomic, assign, readwrite) size_t            bufferLimit;
+- (IBAction)disMissViewController:(id)sender;
+- (IBAction)uploadFile:(id)sender;
 
+- (IBAction)deleteButtonClicked:(id)sender;
 @end

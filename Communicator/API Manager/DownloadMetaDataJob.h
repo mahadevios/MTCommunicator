@@ -10,6 +10,7 @@
 #import <Foundation/Foundation.h>
 #import "SBJson4.h"
 #import "objc/runtime.h"
+#import "MBProgressHUD.h"
 
 @protocol DownloadMetaDataJobDelegate;
 
@@ -36,8 +37,11 @@
 }
 
 /*================================================================================================================================================*/
+@property(nonatomic,strong)MBProgressHUD * hud;
 
 @property (nonatomic,strong)  NSString              *downLoadEntityJobName;
+@property (nonatomic,strong)  UIWindow              *window;
+
 @property (nonatomic,strong)  NSString              *downLoadResourcePath;
 @property (nonatomic,strong)  NSDictionary          *requestParameter;
 @property (nonatomic,strong)  NSString              *httpMethod;

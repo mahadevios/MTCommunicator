@@ -11,6 +11,7 @@
 #import <MobileCoreServices/MobileCoreServices.h>
 #import "Database.h"
 #import "Report.h"
+#import "UIColor+CommunicatorColor.h"
 @interface ReportAndDocsViewController ()
 //@property(nonatomic,strong) UIDocumentInteractionController* documentInteractionController;
 @end
@@ -20,7 +21,7 @@
 @synthesize reportButton;
 @synthesize reportButtonUnderlineView;
 @synthesize documentButton;
-@synthesize documentButtonUnderlineView;
+@synthesize documentButtonUnderlineView,search,searchController;
 
 
 - (void)viewDidLoad
@@ -30,7 +31,21 @@
     documentButtonUnderlineView.hidden=YES;
     // Do any additional setup after loading the view.
     arrayForBool=[[NSMutableArray alloc]init];
+    refreshControl = [[UIRefreshControl alloc]init];
+    refreshControl.tag=1000;
+    [self.tableView addSubview:refreshControl];
+    [refreshControl addTarget:self action:@selector(refreshTable) forControlEvents:UIControlEventValueChanged];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(get50Report:) name:NOTIFICATION_REPORT_LOAD_MORE_DATA
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(get50Document:) name:NOTIFICATION_DOCUMENT_LOAD_MORE_DATA
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(reloadData) name:NOTIFICATION_UPADTE_REPORT_DOCS_VIEW
+                                               object:nil];
 
+    fileNameUserArray=[[NSMutableArray alloc]init];
 //    sectionTitleArray=[[NSArray alloc]initWithObjects:
 //                       @"Date 1",
 //                       @"Date 2",
@@ -41,16 +56,110 @@
 //                       @"Date 6",
 //                       @"Date 7",
 //                       nil];
+    
+//    [[NSNotificationCenter defaultCenter] addObserver:self
+//                                             selector:@selector(reloadData) name:NOTIFICATION_REPORT_NOTI_DATA
+//                                               object:nil];
    
 }
+-(void)get50Report:(NSNotification*)data
+{
+    [[Database shareddatabase] insertLoadMoreReportNotificationData:data.object];
+    [refreshControl endRefreshing];
+}
+-(void)get50Document:(NSNotification*)data
+{
+    [[Database shareddatabase] insertLoadMoreDocumentNotificationData:data.object];
+
+    [refreshControl endRefreshing];
+
+}
+-(void)refreshTable
+{
+    NSString* username = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
+    NSString* password = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"];
+    
+    NSString* companyId=[[Database shareddatabase] getCompanyId:username];
+    //    NSString* userFeedback=[[Database shareddatabase] getUserIdFromUserName:username];
+    NSString* userFrom,*userTo;
+    if ([companyId isEqual:@"1"])
+    {
+        userFrom= [[Database shareddatabase] getAdminUserId];
+        username=[[Database shareddatabase] getUserNameFromCompanyname:[[NSUserDefaults standardUserDefaults]valueForKey:@"selectedCompany"]];
+        userTo=[[Database shareddatabase] getUserIdFromUserNameWithRoll1:username];
+        
+    }
+    
+    else
+    {
+        userTo=[[Database shareddatabase] getAdminUserId];
+        userFrom= [[Database shareddatabase] getUserIdFromUserNameWithRoll1:username];
+    }
+    NSMutableArray* feedbackIDsArray;
+    if ([[[NSUserDefaults standardUserDefaults]valueForKey:@"flag1"]isEqualToString:@"0"])
+    {
+       feedbackIDsArray= [[Database shareddatabase] getReportIds:userFrom userTo:userTo];
+
+    }
+    else
+    {
+        feedbackIDsArray= [[Database shareddatabase] getDocumentIds:userFrom userTo:userTo];
+
+    }
+    NSMutableString* feedIdsString;
+    
+    if (feedbackIDsArray.count==0)
+    {
+        feedIdsString=[@"1" mutableCopy];
+    }
+    for (int i=0; i<feedbackIDsArray.count; i++)
+    {
+        if (i==0)
+        {
+            feedIdsString=[feedbackIDsArray objectAtIndex:i];
+        }
+        //        else
+        //            if (i==feedbackIDsArray.count-1)
+        //            {
+        //                feedIdsString=[NSMutableString stringWithFormat:@"%@%@",feedIdsString,[feedbackIDsArray objectAtIndex:i]];
+        //            }
+        else
+        {
+            feedIdsString=[NSMutableString stringWithFormat:@"%@,%@",feedIdsString,[feedbackIDsArray objectAtIndex:i]];
+        }
+    }
+    NSString* username1 = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
+    
+    //int feedbackType=  [[Database shareddatabase] getFeedbackIdFromFeedbackType:self.feedbackType];
+    if ([[[NSUserDefaults standardUserDefaults]valueForKey:@"flag1"]isEqualToString:@"0"])
+    {
+        [[APIManager sharedManager] getLoadMoreReportData:username1 password:password userFrom:userFrom userTo:userTo feedbackIdsArray:feedIdsString];
+
+    }
+    else
+    {
+        [[APIManager sharedManager] getLoadMoreDocumentData:username1 password:password userFrom:userFrom userTo:userTo feedbackIdsArray:feedIdsString];
+
+    }
+    [self.tableView reloadData];
+}
+
 -(void)popViewController1
 {
-    UINavigationController *navController = self.navigationController;
-    UIViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"LoginNaviagationController"];
-    [navController presentViewController:vc animated:YES completion:nil];
-    NSUserDefaults* defaults=[NSUserDefaults standardUserDefaults];
-    [defaults setObject:NULL forKey:@"userObject"];
-    [defaults setObject:NULL forKey:@"selectedCompany"];
+    //UINavigationController *navController = self.navigationController;
+//    NSUserDefaults* defaults=[NSUserDefaults standardUserDefaults];
+//    [[APIManager sharedManager] logout:[defaults valueForKey:@"currentUser"] Password:[defaults valueForKey:@"currentPassword"]];
+//
+//    [defaults setObject:NULL forKey:@"userObject"];
+//    [defaults setObject:NULL forKey:@"selectedCompany"];
+//    
+//    [defaults setValue:NULL forKey:@"currentUser"];
+//    [defaults setValue:NULL forKey:@"currentPassword"];
+    [[AppPreferences sharedAppPreferences] logout];
+    UIViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"LoginViewController"];
+    [[[UIApplication sharedApplication]keyWindow].rootViewController presentViewController:vc animated:NO completion:nil];
+  //  [navController presentViewController:vc animated:YES completion:nil];
+    
 }
 
 //-(void)uploadFileToServer
@@ -59,39 +168,137 @@
 //
 //
 //
-//}
+//}-
+-(void)reloadData
+{
+    Database *db=[Database shareddatabase];
+    if ([[[NSUserDefaults standardUserDefaults]valueForKey:@"flag1"]isEqualToString:@"0"])
+    {
+        [db setReportView];
+    }
+    else
+    {
+        [db setDocumentView];
+
+    }
+    [self setFilesDateWise];
+    [self.tableView reloadData];
+}
 -(void)viewWillAppear:(BOOL)animated
 {
     self.tabBarController.navigationItem.title = @"Reports & Docs";
      //self.tabBarController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:image style:UIBarButtonItemStylePlain target:self action:@selector(popViewController1)] ;
-    self.tabBarController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"SignOut"] style:UIBarButtonItemStylePlain target:self action:@selector(popViewController1)] ;
-     self.tabBarController.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"Upload"] style:UIBarButtonItemStylePlain target:self action:@selector(selectFileToUpload:)] ;
+    self.navigationController.navigationBar.backgroundColor = [UIColor communicatorColor];
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+//    self.navigationController.navigationBar.barTintColor = [UIColor communicatorColor];
+    [self.navigationController.navigationBar setBarStyle:UIStatusBarStyleLightContent];
+    
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"SignOut"] style:UIBarButtonItemStylePlain target:self action:@selector(popViewController1)] ;
+     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"Upload"] style:UIBarButtonItemStylePlain target:self action:@selector(selectFileToUpload:)] ;
     [self.navigationItem setHidesBackButton:NO];
-    //self.navigationController.navigationBar.barTintColor = [UIColor communicatorColor];
-    self.tabBarController.navigationItem.leftBarButtonItem.tintColor=[UIColor whiteColor];
-    self.tabBarController.navigationItem.rightBarButtonItem.tintColor=[UIColor whiteColor];
+    self.navigationController.navigationBar.barTintColor = [UIColor communicatorColor];
+    self.navigationItem.leftBarButtonItem.tintColor=[UIColor whiteColor];
+    self.navigationItem.rightBarButtonItem.tintColor=[UIColor whiteColor];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(get50Reports:) name:NOTIFICATION_GET_50REPORTS
-                                               object:nil];
+//    [[NSNotificationCenter defaultCenter] addObserver:self
+//                                             selector:@selector(get50Reports:) name:NOTIFICATION_GET_50REPORTS
+//                                               object:nil];
+//    
+//    [[NSNotificationCenter defaultCenter] addObserver:self
+//                                             selector:@selector(get50Documents:) name:NOTIFICATION_GET_50DOCUMENTS
+//                                               object:nil];
+//
     
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(get50Documents:) name:NOTIFICATION_GET_50DOCUMENTS
-                                               object:nil];
+    searchController = [[UISearchController alloc] initWithSearchResultsController:nil];
+    searchController.searchResultsUpdater = self;
+    searchController.searchBar.delegate = self;
+    self.tableView.tableHeaderView = self.searchController.searchBar;
+    self.definesPresentationContext = YES;
+    self.searchController.obscuresBackgroundDuringPresentation = NO;
+    self.searchController.hidesNavigationBarDuringPresentation=NO;     // default is YES
 
 
     Database *db=[Database shareddatabase];
     [db setReportView];
     [self setFilesDateWise];
-[self setSelectedButton:reportButton];
+    [self setSelectedButton:reportButton];
+    [self prepareSearchBar];
+
     
+}
+
+-(void)prepareSearchBar
+{
+    AppPreferences* app=[AppPreferences sharedAppPreferences];
+    //feedTypeArray=[[NSMutableArray alloc]init];
+   // sampleSectionTitleArray=[[NSMutableArray alloc]init];
+    
+  // samplePredicateSectionTitleArray=[[NSMutableArray alloc]init];
+    
+  //  Mom* ft2=[Mom new];
+  //  [sampleSectionTitleArray addObjectsFromArray:sectionTitleArray];
+  //  [samplePredicateSectionTitleArray addObjectsFromArray:sectionTitleArray];
+
+    
+    
+    searchController = [[UISearchController alloc] initWithSearchResultsController:nil];
+    searchController.searchResultsUpdater = self;
+    searchController.searchBar.delegate = self;
+    self.tableView.tableHeaderView = self.searchController.searchBar;
+    self.definesPresentationContext = YES;
+    self.searchController.obscuresBackgroundDuringPresentation = NO;
+    self.searchController.hidesNavigationBarDuringPresentation=NO;     // default is YES
+    
+    
+}
+- (void)updateSearchResultsForSearchController:(UISearchController *)searchController
+{
+   
+    NSPredicate *predicate =[NSPredicate predicateWithFormat:@"name CONTAINS [cd] %@", self.searchController.searchBar.text];
+    NSArray *predicateResultArray;
+    
+    
+    if ([self.searchController.searchBar.text isEqual:@""])
+    {
+        // FeedQueryCounter *ft2=[[FeedQueryCounter alloc]init];
+       // sampleSectionTitleArray=[[NSMutableArray alloc]init];
+        
+        //    [sampleSectionTitleArray addObjectsFromArray:sectionTitleArray];
+        NSMutableArray* sampleArray=[NSMutableArray new];
+
+        for (int i=0; i<fileNameUserArray.count; i++)
+        {
+            sampleArray= [fileNameUserArray objectAtIndex:i];
+            [[AppPreferences sharedAppPreferences].reportFileNamesDictCopy setObject:[NSKeyedArchiver archivedDataWithRootObject:sampleArray] forKey:[sectionTitleArray objectAtIndex:i]];
+        }
+
+        [AppPreferences sharedAppPreferences].reportFileNamesDictCopy=[AppPreferences sharedAppPreferences].reportFileNamesDict;
+            [self.tableView reloadData];
        
+    }
+    
+    
+    else
+    {
+       // sampleSectionTitleArray=[[NSMutableArray alloc]init];
+        NSMutableArray* sampleArray=[NSMutableArray new];
+        predicateResultArray=[[NSMutableArray alloc]init];
+        for (int i=0; i<fileNameUserArray.count; i++)
+        {
+           sampleArray= [fileNameUserArray objectAtIndex:i];
+            predicateResultArray =[sampleArray filteredArrayUsingPredicate:predicate];
+            [[AppPreferences sharedAppPreferences].reportFileNamesDictCopy setObject:[NSKeyedArchiver archivedDataWithRootObject:predicateResultArray] forKey:[sectionTitleArray objectAtIndex:i]];
+        }
+        
+        
+        [self.tableView reloadData];
+    }
 }
 
 -(void)selectFileToUpload:(NSString*)para
 {
     UIViewController* vc= [self.storyboard instantiateViewControllerWithIdentifier:@"UploadFileViewController"];
-    [self.navigationController pushViewController:vc animated:YES];
+    [self presentViewController:vc animated:YES completion:nil];
 
 }
 
@@ -99,16 +306,58 @@
 {
     AppPreferences *app=[AppPreferences sharedAppPreferences];
     sectionTitleArray=[[NSMutableArray alloc]init];
-    sectionTitleArray= [app.reportFileNamesDict allKeys];
+    app.reportFileNamesDictCopy=app.reportFileNamesDict;
+    sectionTitleArray= [NSMutableArray arrayWithArray:[app.reportFileNamesDictCopy allKeys]];
+    NSString* temp;
+    NSComparisonResult result;
+
+//    for (int i=0; i<demoArray.count; i++)
+//    {
+//        NSString *strCurrentDate =[demoArray objectAtIndex:i];
+//        NSString *strServerDate =[demoArray objectAtIndex:i+1];
     
+    for (int i=0; i<sectionTitleArray.count; i++)
+    {
+        for (int j=1; j<sectionTitleArray.count-i; j++)
+        {
+            result=[[sectionTitleArray objectAtIndex:j-1] compare:[sectionTitleArray objectAtIndex:j]];
+            if (result==NSOrderedAscending)
+            {
+                temp=[sectionTitleArray objectAtIndex:j-1];
+                [sectionTitleArray replaceObjectAtIndex:j-1 withObject:[sectionTitleArray objectAtIndex:j]];
+                [sectionTitleArray replaceObjectAtIndex:j withObject:temp];
+
+            }
+        }
+    }
+    
+    
+        //        NSComparisonResult result;
+        
+//        result = [currentDate compare:serverDate]; // comparing two dates
+//        
+//        if(result == NSOrderedAscending)
+//            NSLog(@"current date is less");
+//        else if(result == NSOrderedDescending)
+//        {
+//            NSLog(@"server date is less");
+//
+//        }
+//        else if(result == NSOrderedSame)
+//            NSLog(@"Both dates are same");
+//        else
+//            NSLog(@"Date cannot be compared");
+   // }
+    fileNameUserArray=nil;
+    fileNameUserArray=[NSMutableArray new];
 
     for (int i=0; i<sectionTitleArray.count; i++)
     {
         
         NSString *encodedObjec= [sectionTitleArray objectAtIndex:i];
-        NSData *encodedObject=[app.reportFileNamesDict valueForKey:encodedObjec];
-        fileNameUserArray = [NSKeyedUnarchiver unarchiveObjectWithData:encodedObject];
-        
+        NSData *encodedObject=[app.reportFileNamesDictCopy valueForKey:encodedObjec];
+       // fileNameUserArray=[NSKeyedUnarchiver unarchiveObjectWithData:encodedObject] ;
+                [fileNameUserArray addObject:[NSKeyedUnarchiver unarchiveObjectWithData:encodedObject]];
     }
     
     for (int i=0; i<[sectionTitleArray count]; i++)
@@ -121,28 +370,28 @@
 }
 
 
-- (void)get50Reports:(NSNotification *)notificationData
-{
-    if ([[notificationData.object objectForKey:@"code"] isEqualToString:SUCCESS])
-    {
-        NSLog(@"in noti");
-        Database *db=[Database shareddatabase];
-        [db insertReportData:notificationData.object];
-       // AppPreferences *app=[AppPreferences sharedAppPreferences];
-        
-    }
-}
-- (void)get50Documents:(NSNotification *)notificationData
-{
-    if ([[notificationData.object objectForKey:@"code"] isEqualToString:SUCCESS])
-    {
-        NSLog(@"in noti");
-        Database *db=[Database shareddatabase];
-        [db insertDocumentsData:notificationData.object];
-       // AppPreferences *app=[AppPreferences sharedAppPreferences];
-        
-    }
-}
+//- (void)get50Reports:(NSNotification *)notificationData
+//{
+//    if ([[notificationData.object objectForKey:@"code"] isEqualToString:SUCCESS])
+//    {
+//        NSLog(@"in noti");
+//        Database *db=[Database shareddatabase];
+//        [db insertReportData:notificationData.object];
+//       // AppPreferences *app=[AppPreferences sharedAppPreferences];
+//        
+//    }
+//}
+//- (void)get50Documents:(NSNotification *)notificationData
+//{
+//    if ([[notificationData.object objectForKey:@"code"] isEqualToString:SUCCESS])
+//    {
+//        NSLog(@"in noti");
+//        Database *db=[Database shareddatabase];
+//        [db insertDocumentsData:notificationData.object];
+//       // AppPreferences *app=[AppPreferences sharedAppPreferences];
+//        
+//    }
+//}
 
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -160,7 +409,7 @@
     if ([[arrayForBool objectAtIndex:section] boolValue])
     {
         NSString *encodedObjec= [sectionTitleArray objectAtIndex:section];
-        NSData *encodedObject=[app.reportFileNamesDict valueForKey:encodedObjec];
+        NSData *encodedObject=[app.reportFileNamesDictCopy valueForKey:encodedObjec];
         NSMutableArray* file = [NSKeyedUnarchiver unarchiveObjectWithData:encodedObject];
         return file.count;
     }
@@ -169,9 +418,9 @@
 }
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
 {
-    BOOL isExapnd  = [[arrayForBool objectAtIndex:section] boolValue];
 
     sectionView=[[UIView alloc]initWithFrame:CGRectMake(0, 0, 280,40)];
+    sectionView.backgroundColor=[UIColor whiteColor];
     UILabel *fileCountLabel=[[UILabel alloc]initWithFrame:CGRectMake(self.tableView.frame.size.width-60, 5, 50, 40)];
 
     //UIImage* fileClosed=[UIImage imageNamed:@"Fileclosed"];
@@ -188,7 +437,7 @@
         AppPreferences* app=[AppPreferences sharedAppPreferences];
 
         NSString *encodedObjec= [sectionTitleArray objectAtIndex:section];
-        NSData *encodedObject=[app.reportFileNamesDict valueForKey:encodedObjec];
+        NSData *encodedObject=[app.reportFileNamesDictCopy valueForKey:encodedObjec];
         NSMutableArray* file = [NSKeyedUnarchiver unarchiveObjectWithData:encodedObject];
         imageView.image=[UIImage imageNamed:@"Fileclosed"];
         fileCountLabel.text=[NSString stringWithFormat:@"%ld Files",file.count];
@@ -260,15 +509,20 @@
     {
         UILabel* fileNameLabel=(UILabel*)[cell viewWithTag:101];
         NSString *encodedObjec= [sectionTitleArray objectAtIndex:indexPath.section];
-        NSData *encodedObject=[app.reportFileNamesDict valueForKey:encodedObjec];
+        NSData *encodedObject=[app.reportFileNamesDictCopy valueForKey:encodedObjec];
        NSMutableArray* file = [NSKeyedUnarchiver unarchiveObjectWithData:encodedObject];
         
                    Report *obj= [file objectAtIndex:indexPath.row];
-            NSLog(@"%@",obj.name);
        
 
-       
-        fileNameLabel.text=[NSString stringWithFormat:@"%@",obj.name];
+       UIButton* downloadButton=(UIButton*)[cell viewWithTag:103];
+        downloadButton.titleLabel.text=obj.name;
+        downloadButton.titleLabel.textColor=[UIColor clearColor];
+        [downloadButton addTarget:self action:@selector(showFilePreviewOrDownload:) forControlEvents:UIControlEventTouchUpInside];
+
+       // fileNameLabel.text=[NSString stringWithFormat:@"%@",obj.name];
+        fileNameLabel.text= [obj.name substringFromIndex:13];
+
         fileNameLabel.font=[UIFont systemFontOfSize:15.0f];
         if ([[[NSUserDefaults standardUserDefaults]valueForKey:@"flag1"]isEqualToString:@"0"])
         filePath=[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/Reports/%@",obj.name]];
@@ -312,18 +566,20 @@
     
     NSString* filenameString=fileNameLabel.text;
 
-    [self showFilePreviewOrDownload:filenameString];
+    //[self showFilePreviewOrDownload:filenameString];
     
 }
 
--(void)showFilePreviewOrDownload:(NSString*)filenameString
+-(void)showFilePreviewOrDownload:(UIButton*)sender
 {
     NSString* folderName;
     NSError* error;
     NSString *destpath;
-    NSString* stringURL = [NSString stringWithFormat:@"http://localhost:9090/coreflex/resources/CfsFiles/%@",filenameString];
-    NSString* webStringURL = [stringURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-    NSURL* url = [NSURL URLWithString:webStringURL];
+   // NSString* stringURL = [NSString stringWithFormat:@"http://localhost:9090/coreflex/resources/CfsFiles/%@",filenameString];
+   // NSString* stringURL = [NSString stringWithFormat:@"%@%@",HTTP_UPLOAD_PATH,filenameString];
+
+   // NSString* webStringURL = [stringURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+   // NSURL* url = [NSURL URLWithString:webStringURL];
     if ([[[NSUserDefaults standardUserDefaults]valueForKey:@"flag1"]isEqualToString:@"0"])
     {
         folderName=@"Reports";
@@ -331,8 +587,8 @@
     else
         folderName=@"Documents";
     
-    filenameString=@"1469363039819Untitled.png";
-    destpath=[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%@/%@",folderName,filenameString]];
+    //filenameString=@"1469363039819Untitled.png";
+    destpath=[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%@/%@",folderName,sender.titleLabel.text]];
     
     NSString* filePath=[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%@",folderName]];
     
@@ -340,12 +596,12 @@
     {
       if (![[NSFileManager defaultManager] fileExistsAtPath:filePath])
             [[NSFileManager defaultManager] createDirectoryAtPath:filePath withIntermediateDirectories:NO attributes:nil error:&error]; //Create folder
-        [self startReceive:filenameString];
+        [self startReceive:sender];
       
     }
     else
     {
-        NSString* fileURL=[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%@/%@",folderName,filenameString]];
+        NSString* fileURL=[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%@/%@",folderName,sender.titleLabel.text]];
         NSURL* file = [NSURL fileURLWithPath:fileURL];
         
         UIDocumentInteractionController* documentInteractionController = [UIDocumentInteractionController interactionControllerWithURL:file];
@@ -362,12 +618,13 @@
 
 }
 
--(void)startReceive:(NSString*)filename
+-(void)startReceive:(UIButton*)sender
 {
     //   NSURL *url = [NSURL URLWithString:@"ftp://ftp.funet.fi/pub/standards/RFC/rfc959.txt"];
-       NSString* fileName=@"1469363039819Untitled.png";
+      // NSString* fileName=@"1469363039819Untitled.png";
     //NSString* fileName=sender.titleLabel.text;
-    
+    downloadableAttachmentName=sender.titleLabel.text;
+
     NSString* username = [FTPUsername stringByReplacingOccurrencesOfString:@"@"
                                                                 withString:@"%40"];
     
@@ -376,7 +633,7 @@
     
     
     
-    NSString* urlString=[NSString stringWithFormat:@"ftp://%@:%@%@%@%@",username,password,FTPHostName,FTPFilesFolderName,fileName];
+    NSString* urlString=[NSString stringWithFormat:@"ftp://%@:%@%@%@%@",username,password,FTPHostName,FTPFilesFolderName,downloadableAttachmentName];
     
     // NSURL *url = [NSURL URLWithString:@"ftp://demoFtp%40pantudantukids.com:asdf123@pantudantukids.com:21/TEST/1469363039819Untitled.png"];
     NSURL *url = [NSURL URLWithString:urlString];
@@ -388,7 +645,6 @@
     
     
     NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfiguration delegate:self delegateQueue:nil];
-    NSLog(@"viewdidload");
     
     NSURLSessionDownloadTask *downloadTask = [session downloadTaskWithURL:url];
     [downloadTask resume];
@@ -415,7 +671,7 @@ didCompleteWithError:(nullable NSError *)error
         folderName=@"Documents";
 
     NSData *data = [NSData dataWithContentsOfURL:location];
-    NSString* destpath=[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%@/%@",folderName,@"1469363039819Untitled.png"]];
+    NSString* destpath=[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%@/%@",folderName,downloadableAttachmentName]];
     
     [data writeToFile:destpath atomically:YES];
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -471,8 +727,9 @@ didCompleteWithError:(nullable NSError *)error
     
     // NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", @"http://192.168.3.170:8080/coreflex/feedcom", @"uploadFileFromMobile"]];
     
-    NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", @"http://localhost:9090/coreflex/feedcom", @"uploadFileFromMobile"]];
-    
+  //  NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", @"http://localhost:9090/coreflex/feedcom", @"uploadFileFromMobile"]];
+    NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", BASE_URL_PATH, @"uploadFileFromMobile"]];
+
     
     NSString *boundary = [self generateBoundaryString];
     
@@ -503,7 +760,6 @@ didCompleteWithError:(nullable NSError *)error
         }
         
         NSString *result = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        NSLog(@"result = %@", result);
     }];
     
     

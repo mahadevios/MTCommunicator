@@ -17,6 +17,7 @@
 @property(nonatomic,strong)NSString* firstname;
 @property(nonatomic,strong)NSString* lastname;
 @property(nonatomic)int statusId;
+@property(nonatomic)int readStatus;
 
 
 

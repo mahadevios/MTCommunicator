@@ -16,6 +16,7 @@
     
 }
 
+@property (weak, nonatomic) MBProgressHUD *hud;
 
 @property (weak, nonatomic) IBOutlet UITextField *usenameTextField;
 
@@ -25,16 +26,18 @@
 
 @property (weak, nonatomic) IBOutlet UILabel *remeberMeLabel;
 
-@property (weak, nonatomic) IBOutlet UIView *subView;
+//@property (weak, nonatomic) IBOutlet UIView *subView;
+
+@property (weak, nonatomic) IBOutlet UIView *navigationView;
 
 
 - (IBAction)loginButtonTapped:(id)sender;
 
 - (IBAction)rememberMeButtonTapped:(id)sender;
 
-@property (weak, nonatomic) IBOutlet UIButton *buttonColor;
-@property (weak, nonatomic) IBOutlet UINavigationItem *navigationBar;
+- (IBAction)forgotPasswordButtonClicked:(id)sender;
 
-@property (weak, nonatomic) MBProgressHUD *hud;
+//@property (weak, nonatomic) IBOutlet UIButton *buttonColor;
+
 @end
 

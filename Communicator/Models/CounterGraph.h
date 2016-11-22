@@ -20,5 +20,6 @@
 @property(nonatomic,strong)NSArray* attachmentArray;
 @property(nonatomic,strong)UITableViewCell* cell;
 @property(nonatomic)int selectedIndex;
+@property(nonatomic)NSIndexPath* indexPath;
 
 @end

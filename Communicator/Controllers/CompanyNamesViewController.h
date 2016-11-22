@@ -10,6 +10,12 @@
 
 @interface CompanyNamesViewController : UIViewController
 
+{
+    UIAlertController *alertController;
+    UIAlertAction *actionDelete;
+    UIAlertAction *actionCancel;
+
+}
 @property (weak, nonatomic) IBOutlet UILabel *SelectComapnyHeaderLabel;
 
 

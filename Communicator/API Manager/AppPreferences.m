@@ -162,8 +162,37 @@ static AppPreferences *singleton = nil;
 }
 
 
+-(void)logout
+{
+    NSUserDefaults* defaults=[NSUserDefaults standardUserDefaults];
+    [[APIManager sharedManager] logout:[defaults valueForKey:@"currentUser"] Password:[defaults valueForKey:@"currentPassword"]];
+    
+    [defaults setObject:NULL forKey:@"userObject"];
+    [defaults setObject:NULL forKey:@"selectedCompany"];
+    [defaults setValue:NULL forKey:@"selectedCompany"];
+    [defaults setValue:NULL forKey:@"currentUser"];
+    [defaults setValue:NULL forKey:@"currentPassword"];
+    
+    [[Database shareddatabase] removeUserdata];
+}
 
-
+-(void)refreshAllViewData
+{
+    NSString* username = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
+    NSString* companyId=[[Database shareddatabase] getCompanyId:username];
+    NSString* selectedCompany;
+    if ([companyId isEqual:@"1"])
+    {
+        selectedCompany= [[NSUserDefaults standardUserDefaults] valueForKey:@"selectedCompany"];
+        //companyId= [[Database shareddatabase] getCompanyIdFromCompanyName1:selectedCompany];
+    }
+    else
+    {
+        selectedCompany= [[Database shareddatabase] getCompanyIdFromCompanyName:companyId];
+    }
+    
+    [[Database shareddatabase] getFeedbackAndQueryCounterForCompany:selectedCompany];
+}
 
 
 
