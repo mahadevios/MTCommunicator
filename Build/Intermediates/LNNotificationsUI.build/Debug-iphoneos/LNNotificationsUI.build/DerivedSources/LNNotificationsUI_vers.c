@@ -1,0 +1,1 @@
+ const unsigned char LNNotificationsUIVersionString[] __attribute__ ((used)) = "@(#)PROGRAM:LNNotificationsUI  PROJECT:LNNotificationsUI-1" "\n"; const double LNNotificationsUIVersionNumber __attribute__ ((used)) = (double)1.;

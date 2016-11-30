@@ -15,6 +15,8 @@
 @interface AppPreferences : NSObject 
 {
     id<AppPreferencesDelegate> alertDelegate;
+    
+   
 }
 
 @property (nonatomic,strong)    id<AppPreferencesDelegate> alertDelegate;

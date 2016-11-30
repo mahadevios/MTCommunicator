@@ -166,7 +166,7 @@
     searchController.searchBar.delegate = self;
     self.tableView.tableHeaderView = self.searchController.searchBar;
     self.definesPresentationContext = YES;
-    self.searchController.obscuresBackgroundDuringPresentation = NO;
+   // self.searchController.obscuresBackgroundDuringPresentation = NO;
     self.searchController.hidesNavigationBarDuringPresentation=NO;     // default is YES
     
 
@@ -234,13 +234,34 @@
 
 -(void)popViewController1
 {
-    [[AppPreferences sharedAppPreferences] logout];
-    NSUserDefaults* defaults=[NSUserDefaults standardUserDefaults];
-    [defaults setObject:NULL forKey:@"userObject"];
-    [defaults setObject:NULL forKey:@"selectedCompany"];
-    UINavigationController *navController = self.navigationController;
-    UIViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"LoginViewController"];
-    [navController presentViewController:vc animated:YES completion:nil];
+    alertController = [UIAlertController alertControllerWithTitle:@"Logout?"
+                                                          message:@"Are you sure to logout"
+                                                   preferredStyle:UIAlertControllerStyleAlert];
+    actionDelete = [UIAlertAction actionWithTitle:@"Yes"
+                                            style:UIAlertActionStyleDefault
+                                          handler:^(UIAlertAction * action)
+                    {
+                        [[AppPreferences sharedAppPreferences] logout];
+                        NSUserDefaults* defaults=[NSUserDefaults standardUserDefaults];
+                        [defaults setObject:NULL forKey:@"userObject"];
+                        [defaults setObject:NULL forKey:@"selectedCompany"];
+                        UINavigationController *navController = self.navigationController;
+                        UIViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"LoginViewController"];
+                        [navController presentViewController:vc animated:YES completion:nil];
+                    }]; //You can use a block here to handle a press on this button
+    [alertController addAction:actionDelete];
+    
+    
+    actionCancel = [UIAlertAction actionWithTitle:@"Cancel"
+                                            style:UIAlertActionStyleCancel
+                                          handler:^(UIAlertAction * action)
+                    {
+                        [alertController dismissViewControllerAnimated:YES completion:nil];
+                        
+                    }]; //You can use a block here to handle a press on this button
+    [alertController addAction:actionCancel];
+    [self presentViewController:alertController animated:YES completion:nil];
+    
    
 
 }

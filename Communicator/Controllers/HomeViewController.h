@@ -22,6 +22,9 @@
     CGFloat width;
     int selectedFeedbackType;
     long counter,totalCounter,closedCounter;
+    UIAlertController *alertController;
+    UIAlertAction *actionDelete;
+    UIAlertAction *actionCancel;
 }
 
 

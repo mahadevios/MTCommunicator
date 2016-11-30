@@ -553,10 +553,26 @@ static APIManager *singleton = nil;
     
     
     // NSURL* url = [NSURL URLWithString:webStringURL];
-    for (int i=0; i<app.imageFilesArray.count; i++)
-    {
+//    for (int i=0; i<app.imageFilesArray.count; i++)
+//    {
         NSError* error;
-        NSData * data = UIImagePNGRepresentation([app.imageFilesArray objectAtIndex:i]);
+    
+    
+    NSString *destpath1=[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%@/%@",[AppPreferences sharedAppPreferences].fileLocation,[app.imageFileNamesArray objectAtIndex:0]]];
+    //NSData * data;
+    // NSURL* url=[NSURL URLWithString:destpath];
+    
+    NSData* data=[NSData dataWithContentsOfFile:destpath1];
+    // NSURL* url = [NSURL URLWithString:webStringURL];
+    //    for (int i=0; i<app.imageFilesArray.count; i++)
+    //    {
+    if (app.imageFilesArray.count==0)
+    {
+        data = data;
+        
+    }
+else
+        data = UIImagePNGRepresentation([app.imageFilesArray objectAtIndex:0]);
         
 //        NSString* fileLocation;
 //        if ([AppPreferences sharedAppPreferences].fileLocation==@"Gallery")
@@ -574,17 +590,17 @@ static APIManager *singleton = nil;
 //                fileLocation=@"Documents";
 //            }
         NSString *folderpath=[NSHomeDirectory() stringByAppendingPathComponent:@"Documents/Downloads"];
-        
-        NSString *destpath=[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/Downloads/%@",[app.imageFileNamesArray objectAtIndex:i]]];
+    
+        NSString *destpath=[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/Downloads/%@",[app.imageFileNamesArray objectAtIndex:0]]];
         
         if (![[NSFileManager defaultManager] fileExistsAtPath:folderpath])
             [[NSFileManager defaultManager] createDirectoryAtPath:folderpath withIntermediateDirectories:NO attributes:nil error:&error]; //Create folder
         [data writeToFile:destpath atomically:YES];
         
         NSString* path = [NSHomeDirectory() stringByAppendingPathComponent:
-                          [NSString stringWithFormat:@"Documents/Downloads/%@",[app.imageFileNamesArray objectAtIndex:i]] ];
+                          [NSString stringWithFormat:@"Documents/Downloads/%@",[app.imageFileNamesArray objectAtIndex:0]] ];
         //--------------------------------------------------//
-        NSString* fileName = [app.imageFileNamesArray objectAtIndex:i];
+        NSString* fileName = [app.imageFileNamesArray objectAtIndex:0];
         
         
         //NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", @"http://192.168.3.170:8080/coreflex/feedcom", @"uploadFileFromMobile"]];
@@ -601,7 +617,7 @@ static APIManager *singleton = nil;
         //NSString *path = [[NSBundle mainBundle] pathForResource:@"AppIcon80x80" ofType:@"png"];
         
         // configure the request
-        NSDictionary *params = @{@"filename"     : [app.imageFileNamesArray objectAtIndex:i],
+        NSDictionary *params = @{@"filename"     : [app.imageFileNamesArray objectAtIndex:0],
                                  };
         NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
         [request setHTTPMethod:@"POST"];
@@ -675,7 +691,7 @@ static APIManager *singleton = nil;
         }];
         
         
-    }
+   
     
     
     
@@ -887,6 +903,9 @@ static APIManager *singleton = nil;
                         data=[NSData dataWithContentsOfFile:destpath1];
                     }
                     else
+                    {
+                    
+                    }
 //                        data = UIImagePNGRepresentation([app.imageFilesArray objectAtIndex:0]);
 //                    NSString* str=[NSString stringWithFormat:@"Documents/%@",fileLocation];
 //                    //                NSString *folderpath=[NSHomeDirectory() stringByAppendingPathComponent:@"Documents/Downloads"];

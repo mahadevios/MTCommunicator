@@ -164,6 +164,29 @@ static AppPreferences *singleton = nil;
 
 -(void)logout
 {
+//    alertController = [UIAlertController alertControllerWithTitle:@"Logout?"
+//                                                          message:@"Are you sure to logout"
+//                                                   preferredStyle:UIAlertControllerStyleAlert];
+//    actionDelete = [UIAlertAction actionWithTitle:@"Ok"
+//                                            style:UIAlertActionStyleDefault
+//                                          handler:^(UIAlertAction * action)
+//                    {
+//                                                
+//                    }]; //You can use a block here to handle a press on this button
+//    [alertController addAction:actionDelete];
+//    
+//    
+//    actionCancel = [UIAlertAction actionWithTitle:@"Cancel"
+//                                            style:UIAlertActionStyleCancel
+//                                          handler:^(UIAlertAction * action)
+//                    {
+//                        [alertController dismissViewControllerAnimated:YES completion:nil];
+//                        
+//                    }]; //You can use a block here to handle a press on this button
+//    [alertController addAction:actionCancel];
+//    [self presentViewController:alertController animated:YES completion:nil];
+    
+
     NSUserDefaults* defaults=[NSUserDefaults standardUserDefaults];
     [[APIManager sharedManager] logout:[defaults valueForKey:@"currentUser"] Password:[defaults valueForKey:@"currentPassword"]];
     

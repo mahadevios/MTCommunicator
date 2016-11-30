@@ -53,9 +53,9 @@ enum {
 {
     self.navigationController.navigationBar.barTintColor = [UIColor communicatorColor];
     [self.navigationController.navigationBar setBarStyle:UIStatusBarStyleLightContent];//
-    [[self.view viewWithTag:11] setHidden:YES];
-    [[self.view viewWithTag:12] setHidden:YES];
-    [[self.view viewWithTag:101] setHidden:YES];
+    //[[self.view viewWithTag:11] setHidden:YES];
+    //[[self.view viewWithTag:12] setHidden:YES];
+    //[[self.view viewWithTag:101] setHidden:YES];
 
     UILabel* fileNameLabel=[self.view viewWithTag:110];
     if ([AppPreferences sharedAppPreferences].imageFileNamesArray.count>0)
@@ -92,6 +92,13 @@ enum {
 }
 - (IBAction)uploadFileButtonClciked:(id)sender
 {
+    if (!([AppPreferences sharedAppPreferences].imageFilesArray.count>0) && !([AppPreferences sharedAppPreferences].imageFileNamesArray.count>0))
+    {
+    [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Please select the file." withMessage:nil withCancelText:@"Cancel" withOkText:@"Ok" withAlertTag:1000];
+        
+    }
+    else
+    {
     alertController = [UIAlertController alertControllerWithTitle:@""
                                                           message:@"Are you sure to upload this file?"
                                                    preferredStyle:UIAlertControllerStyleAlert];
@@ -155,10 +162,11 @@ enum {
                                     hud.label.text = @"Uploading...";
                                     hud.detailsLabel.text=@" Please wait";
                                     hud.minSize = CGSizeMake(150.f, 100.f);
+                                    [[APIManager sharedManager] uploadFileToServer];
+
                                                                    });
 
                                 
-                                [[APIManager sharedManager] uploadFileToServer];
                             }                           //[self uploadFileToServer:@""];
                             
                             //[self startSend:@""];
@@ -180,6 +188,10 @@ enum {
     [alertController addAction:actionCancel];
     
     [self presentViewController:alertController animated:YES completion:nil];
+        
+    }
+    
+   
 }
 
 //- (IBAction)uploadFile:(id)sender

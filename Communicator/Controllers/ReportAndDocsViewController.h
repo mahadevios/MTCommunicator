@@ -20,6 +20,9 @@
     UIRefreshControl* refreshControl;
     NSMutableArray* sampleSectionTitleArray;
     NSMutableArray* samplePredicateSectionTitleArray;
+    UIAlertController *alertController;
+    UIAlertAction *actionDelete;
+    UIAlertAction *actionCancel;
 
 }
 @property (weak, nonatomic) IBOutlet UITableView *tableView;

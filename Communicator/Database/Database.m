@@ -4821,16 +4821,47 @@ NSString * query = [NSString stringWithFormat:@"SELECT CompanyId FROM user Where
         
         //
         
-        
+    
     
         reportObj.Id=[[singleReportDict valueForKey:@"id"]intValue];
         reportObj.name=[singleReportDict valueForKey:@"name"];
     
         reportObj.date=[notificationData valueForKey:@"date"];
-        
+    
+//    NSString* dateString=[NSString stringWithFormat:@"%@",reportObj.date];
+//    
+//    
+//    
+//    long mssince1970=[dateString doubleValue];
+//    reportObj.date = [NSString stringWithFormat:@"%@",[NSDate dateWithTimeIntervalSince1970:mssince1970/1000.0]];
+//    // feedback.dateOfFeed = [NSString stringWithFormat:@"%@",[NSDate dateWithTimeIntervalSinceNow:da]];
+//    //  feedback.dateOfFeed = [NSDate dateWithTimeIntervalSinceReferenceDate:da/1000];
+//    
+//    
+//    // NSString* dts=[[APIManager sharedManager] getDate];
+//    NSArray* dt= [reportObj.date componentsSeparatedByString:@" "];
+//    reportObj.date=[NSString stringWithFormat:@"%@"@" "@"%@",[dt objectAtIndex:0],[dt objectAtIndex:1]];
+//    
+//    NSDateFormatter* dateFormatter = [[NSDateFormatter alloc] init];
+//    [dateFormatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"UTC"]];
+//    [dateFormatter setDateFormat:DATE_TIME_FORMAT];
+//    NSDate* utcTime = [dateFormatter dateFromString:reportObj.date];
+//    NSLog(@"UTC time: %@", utcTime);
+//    
+//    [dateFormatter setTimeZone:[NSTimeZone systemTimeZone]];
+//    [dateFormatter setDateFormat:DATE_TIME_FORMAT];
+//    NSString* localTime = [dateFormatter stringFromDate:utcTime];
+//    NSLog(@"localTime:%@", localTime);
+//    
+//    
+//    reportObj.date=localTime;
+
+    
+    
+    
         NSDictionary* userFromDict=[singleReportDict valueForKey:@"userModelFrom"];
         reportObj.userFrom=[[userFromDict valueForKey:@"userId"]intValue];
-        
+    
         NSDictionary* userToDict=[singleReportDict valueForKey:@"userModelTo"];
         reportObj.userto=[[userToDict valueForKey:@"userId"]intValue];
         
@@ -4848,7 +4879,7 @@ NSString * query = [NSString stringWithFormat:@"SELECT CompanyId FROM user Where
         sqlite3_stmt *statement;
         sqlite3* feedbackAndQueryTypesDB;
         
-        
+    
         const char * queryi3=[query3 UTF8String];
         if (sqlite3_open([dbPath UTF8String], &feedbackAndQueryTypesDB)==SQLITE_OK)
         {

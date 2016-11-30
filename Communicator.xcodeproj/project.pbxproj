@@ -582,9 +582,9 @@
 				84146D511DB7983B00A478E9 /* CompanyNamesTabBarViewController.h */,
 				84146D521DB7983B00A478E9 /* CompanyNamesTabBarViewController.m */,
 				8457281E1DD04D6900A15DCB /* DocumentDirectoryContentViewController.h */,
+				8457281F1DD04D6900A15DCB /* DocumentDirectoryContentViewController.m */,
 				84C5822B1DDB3DE90031FBEA /* TestViewController.h */,
 				84C5822C1DDB3DE90031FBEA /* TestViewController.m */,
-				8457281F1DD04D6900A15DCB /* DocumentDirectoryContentViewController.m */,
 			);
 			name = ViewControllers;
 			path = Controllers;

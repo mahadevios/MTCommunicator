@@ -155,9 +155,30 @@
 //    
 //    [defaults setValue:NULL forKey:@"currentUser"];
 //    [defaults setValue:NULL forKey:@"currentPassword"];
-    [[AppPreferences sharedAppPreferences] logout];
-    UIViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"LoginViewController"];
-    [[[UIApplication sharedApplication]keyWindow].rootViewController presentViewController:vc animated:NO completion:nil];
+    alertController = [UIAlertController alertControllerWithTitle:@"Logout?"
+                                                          message:@"Are you sure to logout"
+                                                   preferredStyle:UIAlertControllerStyleAlert];
+    actionDelete = [UIAlertAction actionWithTitle:@"Yes"
+                                            style:UIAlertActionStyleDefault
+                                          handler:^(UIAlertAction * action)
+                    {
+                        [[AppPreferences sharedAppPreferences] logout];
+                        UIViewController * vc = [self.storyboard instantiateViewControllerWithIdentifier:@"LoginViewController"];
+                        [[[UIApplication sharedApplication]keyWindow].rootViewController presentViewController:vc animated:NO completion:nil];
+                    }]; //You can use a block here to handle a press on this button
+    [alertController addAction:actionDelete];
+    
+    
+    actionCancel = [UIAlertAction actionWithTitle:@"Cancel"
+                                            style:UIAlertActionStyleCancel
+                                          handler:^(UIAlertAction * action)
+                    {
+                        [alertController dismissViewControllerAnimated:YES completion:nil];
+                        
+                    }]; //You can use a block here to handle a press on this button
+    [alertController addAction:actionCancel];
+    [self presentViewController:alertController animated:YES completion:nil];
+   
   //  [navController presentViewController:vc animated:YES completion:nil];
     
 }
@@ -214,7 +235,7 @@
     searchController.searchBar.delegate = self;
     self.tableView.tableHeaderView = self.searchController.searchBar;
     self.definesPresentationContext = YES;
-    self.searchController.obscuresBackgroundDuringPresentation = NO;
+    //self.searchController.obscuresBackgroundDuringPresentation = NO;
     self.searchController.hidesNavigationBarDuringPresentation=NO;     // default is YES
 
 
@@ -229,7 +250,6 @@
 
 -(void)prepareSearchBar
 {
-    AppPreferences* app=[AppPreferences sharedAppPreferences];
     //feedTypeArray=[[NSMutableArray alloc]init];
    // sampleSectionTitleArray=[[NSMutableArray alloc]init];
     
@@ -246,7 +266,7 @@
     searchController.searchBar.delegate = self;
     self.tableView.tableHeaderView = self.searchController.searchBar;
     self.definesPresentationContext = YES;
-    self.searchController.obscuresBackgroundDuringPresentation = NO;
+    //self.searchController.obscuresBackgroundDuringPresentation = NO;
     self.searchController.hidesNavigationBarDuringPresentation=NO;     // default is YES
     
     
@@ -421,8 +441,8 @@
 
     sectionView=[[UIView alloc]initWithFrame:CGRectMake(0, 0, 280,40)];
     sectionView.backgroundColor=[UIColor whiteColor];
-    UILabel *fileCountLabel=[[UILabel alloc]initWithFrame:CGRectMake(self.tableView.frame.size.width-60, 5, 50, 40)];
-
+    UILabel *fileCountLabel=[[UILabel alloc]initWithFrame:CGRectMake(self.tableView.frame.size.width-120, 5, 110, 40)];
+    fileCountLabel.textAlignment=NSTextAlignmentRight;
     //UIImage* fileClosed=[UIImage imageNamed:@"Fileclosed"];
     UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(10, 5, 35, 35)];
     if ([[arrayForBool objectAtIndex:section] boolValue])
@@ -440,7 +460,7 @@
         NSData *encodedObject=[app.reportFileNamesDictCopy valueForKey:encodedObjec];
         NSMutableArray* file = [NSKeyedUnarchiver unarchiveObjectWithData:encodedObject];
         imageView.image=[UIImage imageNamed:@"Fileclosed"];
-        fileCountLabel.text=[NSString stringWithFormat:@"%ld Files",file.count];
+        fileCountLabel.text=[NSString stringWithFormat:@"%ld File(s)",file.count];
         [sectionView addSubview:fileCountLabel];
     }
         
@@ -450,12 +470,12 @@
    // UILabel* label=[[UILabel alloc]initWithFrame:CGRectMake(10, 0, 50, 40)];
     //UILabel* label=[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 50, 40)];
 
-    UILabel *fileSectionLabel=[[UILabel alloc]initWithFrame:CGRectMake(70, 5, self.tableView.frame.size.width-10, 40)];
+    UILabel *fileSectionLabel=[[UILabel alloc]initWithFrame:CGRectMake(imageView.frame.origin.x+imageView.frame.size.width+10, 5, self.tableView.frame.size.width*0.3, 40)];
     //label.text=@"hello";
     fileSectionLabel.backgroundColor=[UIColor clearColor];
     fileSectionLabel.textColor=[UIColor blackColor];
     fileSectionLabel.font=[UIFont systemFontOfSize:15];
-    fileSectionLabel.text=[NSString stringWithFormat:@"List of Files on %@",[sectionTitleArray objectAtIndex:section]];
+    fileSectionLabel.text=[NSString stringWithFormat:@"%@",[sectionTitleArray objectAtIndex:section]];
     [sectionView addSubview:fileSectionLabel];
     
     
@@ -719,54 +739,54 @@ didCompleteWithError:(nullable NSError *)error
 
 
 
--(void)uploadFileToServer:(NSString *)fileName
-
-{
-    fileName = @"AppIcon80x80.png";
-    
-    
-    // NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", @"http://192.168.3.170:8080/coreflex/feedcom", @"uploadFileFromMobile"]];
-    
-  //  NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", @"http://localhost:9090/coreflex/feedcom", @"uploadFileFromMobile"]];
-    NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", BASE_URL_PATH, @"uploadFileFromMobile"]];
-
-    
-    NSString *boundary = [self generateBoundaryString];
-    
-    NSString *path = [[NSBundle mainBundle] pathForResource:@"AppIcon80x80" ofType:@"png"];
-    
-    // configure the request
-    NSDictionary *params = @{@"filename"     : @"AppIcon80x80.png",
-                             };
-    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
-    [request setHTTPMethod:@"POST"];
-    
-    // set content type
-    
-    NSString *contentType = [NSString stringWithFormat:@"multipart/form-data; boundary=%@", boundary];
-    [request setValue:contentType forHTTPHeaderField: @"Content-Type"];
-    
-    // create body
-    
-    NSData *httpBody = [self createBodyWithBoundary:boundary parameters:params paths:@[path] fieldName:fileName];
-    
-    request.HTTPBody = httpBody;
-    
-    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-        if (connectionError)
-        {
-            NSLog(@"error = %@", connectionError);
-            return;
-        }
-        
-        NSString *result = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    }];
-    
-    
-    
-    
-    
-}
+//-(void)uploadFileToServer:(NSString *)fileName
+//
+//{
+//    fileName = @"AppIcon80x80.png";
+//    
+//    
+//    // NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", @"http://192.168.3.170:8080/coreflex/feedcom", @"uploadFileFromMobile"]];
+//    
+//  //  NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", @"http://localhost:9090/coreflex/feedcom", @"uploadFileFromMobile"]];
+//    NSURL* url=[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", BASE_URL_PATH, @"uploadFileFromMobile"]];
+//
+//    
+//    NSString *boundary = [self generateBoundaryString];
+//    
+//    NSString *path = [[NSBundle mainBundle] pathForResource:@"AppIcon80x80" ofType:@"png"];
+//    
+//    // configure the request
+//    NSDictionary *params = @{@"filename"     : @"AppIcon80x80.png",
+//                             };
+//    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
+//    [request setHTTPMethod:@"POST"];
+//    
+//    // set content type
+//    
+//    NSString *contentType = [NSString stringWithFormat:@"multipart/form-data; boundary=%@", boundary];
+//    [request setValue:contentType forHTTPHeaderField: @"Content-Type"];
+//    
+//    // create body
+//    
+//    NSData *httpBody = [self createBodyWithBoundary:boundary parameters:params paths:@[path] fieldName:fileName];
+//    
+//    request.HTTPBody = httpBody;
+//    
+//    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+//        if (connectionError)
+//        {
+//            NSLog(@"error = %@", connectionError);
+//            return;
+//        }
+//        
+//        NSString *result = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+//    }];
+//    
+//    
+//    
+//    
+//    
+//}
 
 
 
