@@ -56,17 +56,7 @@ NSMutableArray* webFeedTypeArray;
                                              selector:@selector(getLatestRecords:) name:NOTIFICATION_GETLATEST_FEEDCOM
                                                object:nil];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(getLatestMOM:) name:NOTIFICATION_GETLATEST_MOM
-                                               object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(get50Reports:) name:NOTIFICATION_GET_50REPORTS
-                                               object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(get50Documents:) name:NOTIFICATION_GET_50DOCUMENTS
-                                               object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self
+        [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(getForgotPasswordResponse:) name:NOTIFICATION_FORGOT_PASSWORD_API
                                                object:nil];
     
@@ -86,68 +76,24 @@ NSMutableArray* webFeedTypeArray;
 
 
 }
+
 -(void)getForgotPasswordResponse:(NSNotification *)notificationData
 {
     if ([[notificationData.object objectForKey:@"code"] isEqualToString:SUCCESS])
     {
-        [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"" withMessage:@"Please check your mailbox for credentials." withCancelText:nil withOkText:@"Ok" withAlertTag:1001];
-//        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@""
-//                                                                                 message:@"Your credentials has been sent to the email id"
-//                                                                          preferredStyle:UIAlertControllerStyleAlert];
-//        UIAlertAction *actionOk = [UIAlertAction actionWithTitle:@"Ok"
-//                                                           style:UIAlertActionStyleDefault
-//                                                         handler:nil]; //You can use a block here to handle a press on this button
-//        [alertController addAction:actionOk];
-//        [self presentViewController:alertController animated:YES completion:nil];
         
-        //hud = [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
-        //[hud hideAnimated:YES];
+        [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"" withMessage:@"Please check your mailbox for credentials." withCancelText:nil withOkText:@"Ok" withAlertTag:1001];
+        
     }
+    
     if ([[notificationData.object objectForKey:@"code"] isEqualToString:FAILURE])
     {
+        
        [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"" withMessage:@"Incorrect email id!" withCancelText:nil withOkText:@"Ok" withAlertTag:1001];
-        
-        //hud = [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
-        //[hud hideAnimated:YES];
+
     }
 
 
-}
-- (void)getLatestMOM:(NSNotification *)notificationData
-{
-    if ([[notificationData.object objectForKey:@"code"] isEqualToString:SUCCESS])
-    {
-        Database *db=[Database shareddatabase];
-        [db insertLatestRecordsForMOM:notificationData.object];
-        [db setMOMView];
-        
-        
-        //hud = [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
-        //[hud hideAnimated:YES];
-    }
-}
-
-- (void)get50Reports:(NSNotification *)notificationData
-{
-    if ([[notificationData.object objectForKey:@"code"] isEqualToString:SUCCESS])
-    {
-      
-        Database *db=[Database shareddatabase];
-        [db insertReportData:notificationData.object];
-        // AppPreferences *app=[AppPreferences sharedAppPreferences];
-        
-    }
-}
-- (void)get50Documents:(NSNotification *)notificationData
-{
-    if ([[notificationData.object objectForKey:@"code"] isEqualToString:SUCCESS])
-    {
-       
-        Database *db=[Database shareddatabase];
-        [db insertDocumentsData:notificationData.object];
-        // AppPreferences *app=[AppPreferences sharedAppPreferences];
-        
-    }
 }
 
 - (UIStatusBarStyle)preferredStatusBarStyle
@@ -157,66 +103,53 @@ NSMutableArray* webFeedTypeArray;
 -(void)setView
 {
     self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"LoginViewBackgroundImage"]];
-   // self.navigationController.navigationBar.barTintColor = [UIColor communicatorColor];
-   // [self.navigationController.navigationBar setBarStyle:UIStatusBarStyleLightContent];// to set carrier,time and battery color in white color
-    NSDictionary *size = [NSDictionary dictionaryWithObjectsAndKeys:[UIFont fontWithName:@"Source Sans Pro" size:20.0],NSFontAttributeName, nil];
-    
-   // self.navigationController.navigationBar.titleTextAttributes = size;
     
     usenameTextField.layer.cornerRadius=0.0f;
+    
     usenameTextField.layer.masksToBounds=YES;
+    
     usenameTextField.layer.borderColor=[[UIColor grayColor]CGColor];
+    
     usenameTextField.layer.borderWidth= 1.0f;
+    
     passwordTextField.layer.cornerRadius=0.0f;
+    
     passwordTextField.layer.masksToBounds=YES;
+    
     passwordTextField.layer.borderColor=[[UIColor grayColor]CGColor];
+    
     passwordTextField.layer.borderWidth= 1.0f;
+    
     navigationView.backgroundColor=[UIColor communicatorColor];
+    
     [rememberMeButton setSelected:NO];
 
 }
 
 
-#pragma mark:notifications
+#pragma mark:Notifications
+
 //--------notification for NOTIFICATION_VALIDATE_USER-----//
 
 - (void)validateUserResponse:(NSNotification *)notification
 {
-   // hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
-   // [hud hideAnimated:YES];
-    //hud.label.text = NSLocalizedString(@"Please wait...", @"HUD Loading title");
-   // hud.minSize = CGSizeMake(150.f, 100.f);
 
     if ([[notification.object objectForKey:@"code"] isEqualToString:SUCCESS])
     {
         Database *db=[Database shareddatabase];
-        
-      //  [[NSUserDefaults standardUserDefaults] setValue:self.usenameTextField.text forKey:@"currentUser"];
-      //  [[NSUserDefaults standardUserDefaults] setValue:self.passwordTextField.text forKey:@"currentPassword"];
 
         [db insertCompanyRelatedFeedbackTypeAndUsers:notification.object];
        
-       
         [[APIManager sharedManager] findCountForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
-        AppPreferences *app=[AppPreferences sharedAppPreferences];
         
-        
-        app.getFeedbackAndQueryTypesArray = [db getFeedbackAndQueryTypes];
-
-        
-        
-            }
+     }
+    
 }
 
 //--------notification for NOTIFICATION_VALIDATE_COUNTER -----//
 
 - (void)validateCounter:(NSNotification *)notification
 {
-   // hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
-   // hud.label.text = NSLocalizedString(@"Please wait...", @"HUD Loading title");
-   // hud.minSize = CGSizeMake(150.f, 100.f);
-//    [AppPreferences sharedAppPreferences].currentUsername=self.usenameTextField.text;
-//    [AppPreferences sharedAppPreferences].currentPassword=self.passwordTextField.text;
 
     if ([[notification.object objectForKey:@"code"] isEqualToString:SUCCESS])
     {
@@ -227,33 +160,10 @@ NSMutableArray* webFeedTypeArray;
         AppPreferences* app=[AppPreferences sharedAppPreferences];
        
         app.companynameOrIdArray= [db findPermittedCompaniesForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] Password:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
-        
-        NSString* companyId= [db getCompanyId:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"]];
-        
-        
 
         [[APIManager sharedManager]getLatestRecordsForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
-
-//        if (!([companyId isEqual:@"1"]))
-//        {
-//            NSLog(@"%@",[app.companynameOrIdArray objectAtIndex:0]);
-//            
-//            Database* db=[Database shareddatabase];
-//            
-//            NSString* companyName= [NSString stringWithFormat:@"%@",[app.companynameOrIdArray objectAtIndex:0]];
-//        
-//            [db getFeedbackAndQueryCounterForCompany:companyName];
-//
-//            [self pushToHomeView];
-//        }
-//        
-//        else
-//        {
-//            [self pushToCompanyView];
-//        
-//        }
        
-       }
+     }
     
 }
 
@@ -277,27 +187,35 @@ NSMutableArray* webFeedTypeArray;
         NSString* companyId= [db getCompanyId:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"]];
         
         [self performSelector:@selector(getReportDocAndMOMdata) withObject:nil afterDelay:0.0];
+        
         if (!([companyId isEqual:@"1"]))
         {
             Database* db=[Database shareddatabase];
+            
             NSString* companyName= [NSString stringWithFormat:@"%@",[app.companynameOrIdArray objectAtIndex:0]];
             
             [db getFeedbackAndQueryCounterForCompany:companyName];
             
-            
             NSString* userFrom;
+            
             NSString* userTo;
             
             [[NSUserDefaults standardUserDefaults] setValue:usenameTextField.text forKey:@"currentUser"];
+            
             NSString* username = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
+            
             NSString* companyId=[db getCompanyId:username];
+            
             NSString* userFeedback=[db getUserIdFromUserName:username];
+            
             [[NSUserDefaults standardUserDefaults] setValue:companyId forKey:@"clientCompanyId"];
 
             if ([companyId isEqual:@"1"])
             {
                 userFrom=[[Database shareddatabase] getAdminUserId];
+                
                 username=[db getUserNameFromCompanyname:[[NSUserDefaults standardUserDefaults]valueForKey:@"selectedCompany"]];
+                
                 userTo=[db getUserIdFromUserNameWithRoll1:username];
                 
             }
@@ -306,6 +224,7 @@ NSMutableArray* webFeedTypeArray;
             {
                 
                 userTo=[[Database shareddatabase] getAdminUserId];
+                
                 userFrom= [db getUserIdFromUserNameWithRoll1:username];
                 
                 
@@ -330,7 +249,7 @@ NSMutableArray* webFeedTypeArray;
         
 
         
-        app.getFeedbackAndQueryTypesArray = [db getFeedbackAndQueryTypes];
+       // app.getFeedbackAndQueryTypesArray = [db getFeedbackAndQueryTypes];
         
         
         
@@ -447,6 +366,7 @@ NSMutableArray* webFeedTypeArray;
         //    [AppPreferences sharedAppPreferences].firebaseInstanceId
         //if (!authorised)
        // {
+        [passwordTextField resignFirstResponder];
             [[APIManager sharedManager] validateUser:self.usenameTextField.text Password:self.passwordTextField.text andDeviceId:[AppPreferences sharedAppPreferences].firebaseInstanceId];
       //  }
       //  else
@@ -506,6 +426,7 @@ NSMutableArray* webFeedTypeArray;
     
     NSUserDefaults* defaults=[NSUserDefaults standardUserDefaults];
     [defaults setObject:[NSKeyedArchiver archivedDataWithRootObject:userObjForDefault] forKey:@"userObject"];
+    [[APIManager sharedManager] updateDevieToken:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] Password:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"] andDeviceId:[AppPreferences sharedAppPreferences].firebaseInstanceId];
     if ([rememberMeButton isSelected])
     {
         //[[NSUserDefaults standardUserDefaults]setBool:YES forKey:@"rememberMe"];
@@ -571,6 +492,7 @@ NSMutableArray* webFeedTypeArray;
     
     NSUserDefaults* defaults=[NSUserDefaults standardUserDefaults];
     [defaults setObject:[NSKeyedArchiver archivedDataWithRootObject:userObjForDefault] forKey:@"userObject"];
+    [[APIManager sharedManager] updateDevieToken:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] Password:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"] andDeviceId:[AppPreferences sharedAppPreferences].firebaseInstanceId];
     if ([rememberMeButton isSelected])
     {
 //        [[NSUserDefaults standardUserDefaults]setBool:YES forKey:@"rememberMe"];

@@ -48,7 +48,7 @@ static AppPreferences *singleton = nil;
     if (self)
     {
         self.currentSelectedItem = 0;
-        [self startReachabilityNotifier];
+        //[self startReachabilityNotifier];
     }
     
     return self;
@@ -105,7 +105,8 @@ static AppPreferences *singleton = nil;
         //NSLog(@"Not Reachable");
         isReachable = NO;
         
-        [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(showNoInternetMessage) userInfo:nil repeats:NO];
+        //[NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(showNoInternetMessage) userInfo:nil repeats:NO];
+        [self showNoInternetMessage];
     }
 }
 

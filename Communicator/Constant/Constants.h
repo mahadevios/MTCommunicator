@@ -12,16 +12,16 @@
 //http://localhost:9090/coreflex/
 //http://115.249.195.23:8080/Xanadu_MT/
 
-//#define  BASE_URL_PATH                  @"http://192.168.3.172:9090/coreflex/feedcom"
+#define  BASE_URL_PATH                  @"http://192.168.3.80:9090/coreflex/feedcom"
 //#define  BASE_URL_PATH                  @"http://115.249.195.23:8080/Xanadu_MT/feedcom"
 
 
-#define  BASE_URL_PATH                  @"http://192.168.3.150:9091/coreflex/feedcom"
+//#define  BASE_URL_PATH                  @"http://192.168.3.75:9091/coreflex/feedcom"
 
 //#define HTTP_UPLOAD_PATH                @"http://localhost:9090/coreflex/resources/CfsFiles/" //local server
 //#define HTTP_UPLOAD_PATH                @"http://115.249.195.23:8080/Xanadu_MT/resources/CfsFiles/" //local server
-
-//#define  BASE_URL_PATH                  @"http://115.249.195.23:8080/Communicator/feedcom/"  //live server
+//http://115.249.195.23:8080/Communicator
+//#define  BASE_URL_PATH                  @"http://115.249.195.23:8080/Communicator/feedcom"  //live server
 
 //#define  BASE_URL_PATH                  @"http://192.168.3.170:8080/coreflex/feedcom"
 //#define HTTP_UPLOAD_PATH                @"http://192.168.3.170:8080/coreflex/resources/CfsFiles/"  //nikhil sir server
@@ -50,6 +50,7 @@
 #define GET_50_REPORTS                 @"getListOf50Reports"
 #define GET_50_DOCUMENTS               @"getListOf50Documents"
 #define GET_LATEST_MOM                 @"getListOf50MOM"
+#define RUN_ME_TASK                    @"runMeTaskMobile"  
 
 //get notification data
 #define GET_NOTIFICATION_DATA          @"IssueTypeFcmNotification"

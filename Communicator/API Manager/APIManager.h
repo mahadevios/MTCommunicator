@@ -28,6 +28,8 @@
 -(void) sendNewFeedback:(NSString*)flag Dict:(NSDictionary*)feedcomDict username:(NSString*)username password:(NSString*)password;
 -(void) sendNewMOM:(NSString*)feedcomDict username:(NSString*)username password:(NSString*)password;
 
+-(void)runMeTaskMobile:(NSString*)username andPassword:(NSString*)password;
+
 -(void) uploadFile:(NSString*)fileName andFileString:(NSString*)fileString;
 -(void) getLatestMOMForUsername:(NSString*)usernameString andPassword:(NSString*)passwordString;
 -(void) get50ReoprtForUsername:(NSString*)usernameString andPassword:(NSString*)passwordString;

@@ -140,6 +140,8 @@
 
 -(NSMutableArray*)getReportIds:(NSString*)userFrom userTo:(NSString*)userTo;
 
+-(void)getInitiatedByClosedBy:(NSString*)feedbackType;
+
 //load more data of resoective feedback type
 -(void)getLoadMoreData:(NSDictionary*)notificationData;
 

@@ -1,4 +1,4 @@
-//
+        //
 //  APIManager.m
 //  Communicator
 //
@@ -25,7 +25,7 @@ static APIManager *singleton = nil;
     if (singleton == nil)
     {
         singleton = [[APIManager alloc] init];
-        [[AppPreferences sharedAppPreferences] startReachabilityNotifier];
+        //[[AppPreferences sharedAppPreferences] startReachabilityNotifier];
     }
 
     return singleton;
@@ -518,6 +518,25 @@ static APIManager *singleton = nil;
     
 }
 
+-(void)runMeTaskMobile:(NSString*)username andPassword:(NSString*)password
+{
+    
+    if ([[AppPreferences sharedAppPreferences] isReachable])
+    {
+        NSArray *params = [[NSArray alloc] initWithObjects:[NSString stringWithFormat:@"username=%@",username], [NSString stringWithFormat:@"password=%@",password],nil];
+        
+        NSDictionary *dictionary = [[NSDictionary alloc] initWithObjectsAndKeys:params,REQUEST_PARAMETER, nil];
+        
+        DownloadMetaDataJob *downloadlatestrecordsjob=[[DownloadMetaDataJob alloc]initWithdownLoadEntityJobName:RUN_ME_TASK withRequestParameter:dictionary withResourcePath:RUN_ME_TASK withHttpMethd:POST];
+        [downloadlatestrecordsjob startMetaDataDownLoad];
+    }
+    
+    else
+    {
+        [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"No internet connection!" withMessage:@"Please turn on your inernet connection to access this feature" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+    }
+    
+}
 
 
 -(NSString*) getDate
@@ -744,7 +763,7 @@ else
     assert(UTI != NULL);
     
     NSString *mimetype = CFBridgingRelease(UTTypeCopyPreferredTagWithClass(UTI, kUTTagClassMIMEType));
-    assert(mimetype != NULL);
+    //assert(mimetype != NULL);
     
     CFRelease(UTI);
     

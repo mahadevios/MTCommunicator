@@ -51,7 +51,16 @@
     [self reloadData];
      self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"SignOut"] style:UIBarButtonItemStylePlain target:self action:@selector(popViewController1)] ;
     
+    NSTimer* myTimer = [NSTimer scheduledTimerWithTimeInterval: 120.0 target: self
+                                                      selector: @selector(callAfterTwoMinutes) userInfo: nil repeats: YES];
+    
    }
+
+-(void)callAfterTwoMinutes
+{
+    [[APIManager sharedManager] runMeTaskMobile:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
+    
+}
 -(void)viewWillAppear:(BOOL)animated
 {
    //self.tabBarController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"SignOut"] style:UIBarButtonItemStylePlain target:self action:@selector(popViewController1)] ;
@@ -181,7 +190,7 @@
     searchController.searchBar.delegate = self;
     self.tableView.tableHeaderView = self.searchController.searchBar;
     self.definesPresentationContext = YES;
-   // self.searchController.obscuresBackgroundDuringPresentation = NO;
+    self.searchController.obscuresBackgroundDuringPresentation = NO;
     self.searchController.hidesNavigationBarDuringPresentation=NO;     // default is YES
     
 }

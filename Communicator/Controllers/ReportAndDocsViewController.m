@@ -235,7 +235,7 @@
     searchController.searchBar.delegate = self;
     self.tableView.tableHeaderView = self.searchController.searchBar;
     self.definesPresentationContext = YES;
-    //self.searchController.obscuresBackgroundDuringPresentation = NO;
+    self.searchController.obscuresBackgroundDuringPresentation = NO;
     self.searchController.hidesNavigationBarDuringPresentation=NO;     // default is YES
 
 
@@ -266,7 +266,7 @@
     searchController.searchBar.delegate = self;
     self.tableView.tableHeaderView = self.searchController.searchBar;
     self.definesPresentationContext = YES;
-    //self.searchController.obscuresBackgroundDuringPresentation = NO;
+    self.searchController.obscuresBackgroundDuringPresentation = NO;
     self.searchController.hidesNavigationBarDuringPresentation=NO;     // default is YES
     
     

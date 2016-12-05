@@ -42,21 +42,21 @@
 - (void)tabBarController:(UITabBarController *)tabBarController didSelectViewController:(UIViewController *)viewController
 {
     
-    if (viewController.tabBarItem.tag==102)
-    {
-
-        [[APIManager sharedManager]getLatestMOMForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
-
-    }
-    
-    if (viewController.tabBarItem.tag==103)
-    {
-        
-        [[APIManager sharedManager]get50ReoprtForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
-        
-        [[APIManager sharedManager]get50DocumentsForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
-
-    }
+//    if (viewController.tabBarItem.tag==102)
+//    {
+//
+//        [[APIManager sharedManager]getLatestMOMForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
+//
+//    }
+//    
+//    if (viewController.tabBarItem.tag==103)
+//    {
+//        
+//        [[APIManager sharedManager]get50ReoprtForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
+//        
+//        [[APIManager sharedManager]get50DocumentsForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
+//
+//    }
     
 
     

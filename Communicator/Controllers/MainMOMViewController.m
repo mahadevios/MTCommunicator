@@ -45,6 +45,7 @@
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(addMOMButton) name:NOTIFICATION_ADD_MOM_BUTTON
                                                object:nil];
+     [self reloadTable];
     
 }
 
@@ -133,6 +134,7 @@
     
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"SignOut"] style:UIBarButtonItemStylePlain target:self action:@selector(popViewController1)] ;
     //[[Database shareddatabase] setMOMView];
+   
     [self.tableView reloadData];
     [self addMOMButton];
         
@@ -166,7 +168,7 @@
     searchController.searchBar.delegate = self;
     self.tableView.tableHeaderView = self.searchController.searchBar;
     self.definesPresentationContext = YES;
-   // self.searchController.obscuresBackgroundDuringPresentation = NO;
+    self.searchController.obscuresBackgroundDuringPresentation = NO;
     self.searchController.hidesNavigationBarDuringPresentation=NO;     // default is YES
     
 

@@ -21,5 +21,8 @@
 @property(nonatomic,strong)UITableViewCell* cell;
 @property(nonatomic)int selectedIndex;
 @property(nonatomic)NSIndexPath* indexPath;
+@property(nonatomic)UIWebView* webView;
+@property(nonatomic)NSString* webViewValue;
+
 
 @end

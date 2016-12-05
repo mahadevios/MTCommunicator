@@ -59,6 +59,8 @@
 @property(nonatomic,strong)NSMutableArray* uploadedFileNamesArray;
 @property(nonatomic,strong)NSString* deviceToken;
 @property(nonatomic,strong)NSString* fileLocation;
+@property(nonatomic,strong)NSMutableArray* initatedByClosedByArray;
+
 
 
 +(AppPreferences *) sharedAppPreferences;

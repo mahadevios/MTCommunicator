@@ -432,8 +432,15 @@
             [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Error" withMessage:@"please try again" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
         }
     }
-    
-    
+    if ([self.downLoadEntityJobName isEqualToString:RUN_ME_TASK])
+    {
+        
+        if (response != nil)
+        {
+            
+                }
+
+    }
     if ([self.downLoadEntityJobName isEqualToString:UPDATE_DEVICE_TOKEN])
     {
         

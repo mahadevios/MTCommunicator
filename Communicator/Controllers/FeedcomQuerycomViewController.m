@@ -83,7 +83,7 @@
     
     if (feedbackIDsArray.count==0)
     {
-        feedIdsString=[@"0" mutableCopy];
+        feedIdsString=[@"1" mutableCopy];
     }
     for (int i=0; i<feedbackIDsArray.count; i++)
     {
@@ -126,7 +126,7 @@
     searchController.searchBar.delegate = self;
     self.tableView.tableHeaderView = self.searchController.searchBar;
     self.definesPresentationContext = YES;
-    //self.searchController.obscuresBackgroundDuringPresentation = NO;
+    self.searchController.obscuresBackgroundDuringPresentation = NO;
     self.searchController.hidesNavigationBarDuringPresentation=NO;
     self.definesPresentationContext = YES;
 }
@@ -137,6 +137,7 @@
     [self setNavigationBar];
     [self prepareForSearchBar];
     [self addFeedbackButton];
+     [[Database shareddatabase] getInitiatedByClosedBy:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentFeedbackType"]];
        //[self.view bringSubviewToFront:addFeedbackButton];
 
 //    [[Database shareddatabase] setDatabaseToCompressAndShowTotalQueryOrFeedback:self.feedbackType];
@@ -167,6 +168,7 @@
 
 -(void)reloadData
 {
+     [[Database shareddatabase] getInitiatedByClosedBy:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentFeedbackType"]];
     [[Database shareddatabase] setDatabaseToCompressAndShowTotalQueryOrFeedback:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentFeedbackType"]];
 
      [self prepareForSearchBar];
@@ -297,8 +299,11 @@
         NSArray *components1 = [headerObj1.feedDate componentsSeparatedByString:@"+"];
         NSArray* dateAndTimeArray= [components1[0] componentsSeparatedByString:@" "];
         UILabel* createdByLabel=(UILabel*)[cell viewWithTag:13];
+    
+    //createdByLabel.text= [[AppPreferences sharedAppPreferences].initatedByClosedByArray objectAtIndex:indexPath.row];
         createdByLabel.text=    [NSString stringWithFormat:@"Initiated by: %@ %@",headerObj1.firstname,headerObj1.lastname];
     
+   
         UILabel* dateAndTimeLabel=(UILabel*)[cell viewWithTag:16];
     dateAndTimeLabel.numberOfLines=2;
     dateAndTimeLabel.text=[NSString stringWithFormat:@"%@\n%@",dateAndTimeArray[0],dateAndTimeArray[1]];

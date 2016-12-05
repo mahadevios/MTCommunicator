@@ -4,13 +4,11 @@
 <dict>
 	<key>application-identifier</key>
 	<string>Y56BAH343T.com.coreflexSolutions.Communicator</string>
+	<key>aps-environment</key>
+	<string>development</string>
 	<key>com.apple.developer.team-identifier</key>
 	<string>Y56BAH343T</string>
 	<key>get-task-allow</key>
 	<true/>
-	<key>keychain-access-groups</key>
-	<array>
-		<string>Y56BAH343T.com.coreflexSolutions.Communicator</string>
-	</array>
 </dict>
 </plist>

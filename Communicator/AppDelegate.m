@@ -16,91 +16,118 @@
 #import <FirebaseAnalytics/FirebaseAnalytics.h>
 
 @import FirebaseMessaging;
-//@import FirebaseAnalytics;
+
 @interface AppDelegate ()
 
 @end
 
 @implementation AppDelegate
+
 @synthesize navController,feedcomCommunicationCounterValue;
+
 UIStoryboard *mainStoryboard;
+
 UINavigationController *navigationController;
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    //---FCM---//
     
     AppPreferences* app=[AppPreferences sharedAppPreferences];
+    
     [app startReachabilityNotifier];
+    
     [FIRApp configure];
+    
     NSString *refreshedToken = [[FIRInstanceID instanceID] token];
+    
     [AppPreferences sharedAppPreferences].firebaseInstanceId=refreshedToken;
-    NSLog(@"InstanceID token: %@", refreshedToken);
+    
+    //NSLog(@"InstanceID token: %@", refreshedToken);
     
     // Connect to FCM since connection may have failed when attempted before having a token.
     [self connectToFcm];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(tokenRefreshNotification:)
-                                                 name:kFIRInstanceIDTokenRefreshNotification object:nil];
-    NSUserDefaults *defaults=[NSUserDefaults standardUserDefaults];
-    NSLog(@"%@",NSHomeDirectory());
-    [ defaults setObject:@"0" forKey:@"flag"];
-    [self checkAndCopyDatabase];
     
     //register for remote notification
     
-        if ([application respondsToSelector:@selector(isRegisteredForRemoteNotifications)])
-        {
-            // iOS 8 Notifications
-            [application registerUserNotificationSettings:[UIUserNotificationSettings settingsForTypes:(UIUserNotificationTypeSound | UIUserNotificationTypeAlert | UIUserNotificationTypeBadge) categories:nil]];
-            
-            
-            //return YES;
-            [application registerForRemoteNotifications];
-        }
-        else
-        {
-            // iOS < 8 Notifications
-            [application registerForRemoteNotificationTypes:
-             (UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeAlert | UIRemoteNotificationTypeSound)];
-        }
+    if ([application respondsToSelector:@selector(isRegisteredForRemoteNotifications)])
+    {
+        // iOS 8 Notifications
+        [application registerUserNotificationSettings:[UIUserNotificationSettings settingsForTypes:(UIUserNotificationTypeSound | UIUserNotificationTypeAlert | UIUserNotificationTypeBadge) categories:nil]];
+        
+        
+        //return YES;
+        [application registerForRemoteNotifications];
+    }
+    else
+    {
+        // iOS < 8 Notifications
+        [application registerForRemoteNotificationTypes:
+         (UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeAlert | UIRemoteNotificationTypeSound)];
+    }
 
-
-    if (!([defaults valueForKey:@"userObject"] ==NULL))
+    //***FCM***//
+    
+    
+    
+    
+    
+    
+    //---Check and copy DB---//
+    
+    NSLog(@"%@",NSHomeDirectory());
+    
+    [self checkAndCopyDatabase];     //install db if not alreay
+    
+    
+//---check user object is null or not,if not(user not logged out)---//
+    
+    if (!([[NSUserDefaults standardUserDefaults] valueForKey:@"userObject"] ==NULL))
     {
         
 
         
         Database* db=[Database shareddatabase];
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        NSData *data = [defaults objectForKey:@"userObject"];
+
+        NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:@"userObject"];
+        
         User* userObj = [NSKeyedUnarchiver unarchiveObjectWithData:data];
 
         NSString* companyName= [NSString stringWithFormat:@"%d",userObj.comanyId];
         
-
-        app.getFeedbackAndQueryTypesArray = [db getFeedbackAndQueryTypes];
-
         NSString* company= [db getCompanyIdFromCompanyName:companyName];//for local use to find companyname from company id
-        app.companynameOrIdArray= [db findPermittedCompaniesForUsername:userObj.username Password:userObj.password];
-       
-        [db getFeedbackAndQueryCounterForCompany:company];
         
-        if (!(userObj.comanyId==1))
+        [db getFeedbackAndQueryCounterForCompany:company];//set counters
+        
+        //app.getFeedbackAndQueryTypesArray = [db getFeedbackAndQueryTypes];
+        
+        app.companynameOrIdArray= [db findPermittedCompaniesForUsername:userObj.username Password:userObj.password];//find permitted companies for un n pw
+
+       
+        
+        if (!(userObj.comanyId==1))//if company id != 1,set root view=tabbar and navigate to tab bar
         {
             
-           mainStoryboard = [UIStoryboard storyboardWithName:@"Main" bundle: nil];
+            mainStoryboard = [UIStoryboard storyboardWithName:@"Main" bundle: nil];
             
             
             MainTabBarViewController * vc = [mainStoryboard instantiateViewControllerWithIdentifier:@"MainTabBarViewController"];
             [[UIApplication sharedApplication] keyWindow].rootViewController = nil;
+            
             [self.window makeKeyAndVisible];//important
 
             [[[UIApplication sharedApplication] keyWindow] setRootViewController:vc];
+            
             [vc setTabBars];
         }
-        else
+        
+        else//if company id == 1,present companynamesviewcontroller on existing root view controller
         {
           
             mainStoryboard = [UIStoryboard storyboardWithName:@"Main" bundle: nil];
+            
             CompanyNamesViewController *viewController = (CompanyNamesViewController *)[mainStoryboard instantiateViewControllerWithIdentifier:@"CompanyNamesViewController"];
+            
             [self.window makeKeyAndVisible];
             
             [self.window.rootViewController presentViewController:viewController
@@ -110,11 +137,13 @@ UINavigationController *navigationController;
         }
         
     }
-    else
+    
+    else//if object is null(user logged out),hence present login screen
     {
         UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
 
             LoginViewController *viewController = (LoginViewController *)[storyboard instantiateViewControllerWithIdentifier:@"LoginViewController"];
+        
             [self.window makeKeyAndVisible];
         
             [self.window.rootViewController presentViewController:viewController
@@ -124,7 +153,9 @@ UINavigationController *navigationController;
     
     }
     
-  //  [[LNNotificationCenter defaultCenter] registerApplicationWithIdentifier:@"mail_app_identifier" name:@"Mail" icon:[UIImage imageNamed:@"MailApp"] defaultSettings:[LNNotificationAppSettings defaultNotificationAppSettings]];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(tokenRefreshNotification:)
+                                                 name:kFIRInstanceIDTokenRefreshNotification object:nil];//when firebase InstanceId get updated(for noti),update the token on server
+    
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(getNotificationData:) name:NOTIFICATION_GET_NOTIFICATION_DATA
                                                object:nil];
@@ -139,6 +170,19 @@ UINavigationController *navigationController;
                                              selector:@selector(getMOMNotificationData:) name:NOTIFICATION_MOM_NOTI_DATA
                                                object:nil];
 
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(getLatestMOM:) name:NOTIFICATION_GETLATEST_MOM
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(get50Reports:) name:NOTIFICATION_GET_50REPORTS
+                                               object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(get50Documents:) name:NOTIFICATION_GET_50DOCUMENTS
+                                               object:nil];
+    
+    
+
     return YES;
 }
 
@@ -146,10 +190,11 @@ UINavigationController *navigationController;
 - (void) checkAndCopyDatabase
 {
     NSString *destpath=[NSHomeDirectory() stringByAppendingPathComponent:@"Documents/Communicator_DB.sqlite"];
+    
     NSString *sourcepath=[[NSBundle mainBundle]pathForResource:@"Communicator_DB" ofType:@"sqlite"];
+    
     if(![[NSFileManager defaultManager] fileExistsAtPath:destpath])
     {
-        //   NSLog(@"inside");
         [[NSFileManager defaultManager] copyItemAtPath:sourcepath toPath:destpath error:nil];
     }
 }
@@ -181,7 +226,7 @@ UINavigationController *navigationController;
 //        [navigationController presentViewController:controller animated:YES completion:nil];
 //    }
     
-    [[AppPreferences sharedAppPreferences] startReachabilityNotifier];
+   // [[AppPreferences sharedAppPreferences] startReachabilityNotifier];
 
 }
 
@@ -209,12 +254,12 @@ UINavigationController *navigationController;
 
 -(void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
 {
-    //[AppPreferences sharedAppPreferences].deviceToken=@"23";
 
     NSLog(@"%@",error);
 }
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo
-fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
+fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
+{
     // If you are receiving a notification message while your app is in the background,
     // this callback will not be fired till the user taps on the notification launching the application.
     // TODO: Handle data of notification
@@ -222,13 +267,17 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
     //[[AppPreferences sharedAppPreferences] startReachabilityNotifier];
 
     NSError* error;
+    
     NSDictionary *notifMessageDict = [[userInfo objectForKey:@"aps"] objectForKey:@"alert"];
+    
     NSString* feedcomCommunicationCounterString=[notifMessageDict valueForKey:@"body"];
+    
     NSData *feedcomCommunicationCounterData = [feedcomCommunicationCounterString dataUsingEncoding:NSUTF8StringEncoding];
     
     feedcomCommunicationCounterValue = [NSJSONSerialization JSONObjectWithData:feedcomCommunicationCounterData
                                                                                      options:NSJSONReadingAllowFragments
                                                                                        error:&error];
+    
     NSString* documentId,*reportId,*momId,*issueType,*SONumber,*companyFrom,*companyTo;
     if ([feedcomCommunicationCounterValue valueForKey:@"ReportId"] !=nil)
     {
@@ -249,9 +298,11 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
         companyFrom= [feedcomCommunicationCounterValue valueForKey:@"CompanyFrom"];
         companyTo= [feedcomCommunicationCounterValue valueForKey:@"CompanyTo"];
     }
-   // NSString* notifMessageString= [notifMessageDict valueForKey:@"body"];
-     NSLog(@"%@", userInfo);
+    
+    NSLog(@"%@", userInfo);
+    
     NSLog(@"Message ID: %@", userInfo[@"gcm.message_id"]);
+    
     if (application.applicationState== UIApplicationStateActive)
     {
     
@@ -341,8 +392,11 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
             }
 
             reportId=[feedcomCommunicationCounterValue valueForKey:@"ReportId"];
-            [[APIManager sharedManager] getReoprtForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"] reportId:reportId];
             
+            if (!([[NSUserDefaults standardUserDefaults] valueForKey:@"userObject"] ==NULL))
+            {
+            [[APIManager sharedManager] getReoprtForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"] reportId:reportId];
+            }
             
         }
         else if([feedcomCommunicationCounterValue valueForKey:@"DocumentId"] !=nil)
@@ -463,9 +517,18 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
     // should be done.
     NSString *refreshedToken = [[FIRInstanceID instanceID] token];
     [AppPreferences sharedAppPreferences].firebaseInstanceId=refreshedToken;
-    [[APIManager sharedManager] updateDevieToken:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] Password:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"] andDeviceId:refreshedToken];
+    
+    if (!([[NSUserDefaults standardUserDefaults] valueForKey:@"userObject"]==NULL))
+    {
+        [[APIManager sharedManager] updateDevieToken:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] Password:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"] andDeviceId:refreshedToken];
+    }
+    
     NSLog(@"InstanceID token: %@", refreshedToken);
     
+//    if (!(refreshedToken==NULL))
+//    {
+//        [[NSUserDefaults standardUserDefaults] setValue:refreshedToken forKey:@"deviceToken"];
+//    }
     // Connect to FCM since connection may have failed when attempted before having a token.
     [self connectToFcm];
     
@@ -502,4 +565,38 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
 {
     [[Database shareddatabase] insertMOMNotificationData:data.object];
 }
+
+- (void)getLatestMOM:(NSNotification *)notificationData
+{
+    if ([[notificationData.object objectForKey:@"code"] isEqualToString:SUCCESS])
+    {
+        
+        Database *db=[Database shareddatabase];
+        [db insertLatestRecordsForMOM:notificationData.object];
+        [db setMOMView];
+        
+    }
+}
+
+- (void)get50Reports:(NSNotification *)notificationData
+{
+    if ([[notificationData.object objectForKey:@"code"] isEqualToString:SUCCESS])
+    {
+        
+        Database *db=[Database shareddatabase];
+        [db insertReportData:notificationData.object];
+        
+    }
+}
+- (void)get50Documents:(NSNotification *)notificationData
+{
+    if ([[notificationData.object objectForKey:@"code"] isEqualToString:SUCCESS])
+    {
+        
+        Database *db=[Database shareddatabase];
+        [db insertDocumentsData:notificationData.object];
+        
+    }
+}
+
 @end

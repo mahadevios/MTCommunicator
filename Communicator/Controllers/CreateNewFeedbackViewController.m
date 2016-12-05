@@ -668,7 +668,7 @@
                     hud.label.text = @"Sending...";
                     hud.detailsLabel.text=@" Please wait";
                     hud.minSize = CGSizeMake(150.f, 100.f);
-                [[APIManager sharedManager] sendNewFeedback:[[NSUserDefaults standardUserDefaults] valueForKey:@"flag"] Dict:dic username:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] password:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
+                [[APIManager sharedManager] sendNewFeedback:@"0" Dict:dic username:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] password:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"]];
                
                 }
                 
