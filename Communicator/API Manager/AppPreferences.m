@@ -67,11 +67,12 @@ static AppPreferences *singleton = nil;
     
     Reachability * reach = [Reachability reachabilityWithHostname:@"www.google.com"];
     
+    
     reach.reachableBlock = ^(Reachability * reachability)
     {
         dispatch_async(dispatch_get_main_queue(), ^
                        {
-                           //NSLog(@"Reachable");
+                           NSLog(@"Reachable");
                            isReachable = YES;
                        });
     };
@@ -80,9 +81,9 @@ static AppPreferences *singleton = nil;
     {
         dispatch_async(dispatch_get_main_queue(), ^
                        {
-                           //NSLog(@"Not Reachable");
+                           NSLog(@"Not Reachable");
                            isReachable = NO;
-                           
+                            
                        });
     };
     
@@ -112,10 +113,10 @@ static AppPreferences *singleton = nil;
 
 -(void) showNoInternetMessage
 {
-    if (![self isReachable])
-    {
-        [self showAlertViewWithTitle:@"No internet connection" withMessage:@"Please turn on your inernet connection to access this feature" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
-    }
+//    if (![self isReachable])
+//    {
+//        [self showAlertViewWithTitle:@"No internet connection" withMessage:@"Please turn on your inernet connection to access this feature" withCancelText:nil withOkText:@"OK" withAlertTag:1000];
+//    }
 }
 
 /*=================================================================================================================================================*/

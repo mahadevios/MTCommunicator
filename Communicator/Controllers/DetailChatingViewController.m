@@ -40,54 +40,53 @@
  @implementation DetailChatingViewController
  @synthesize tableview;
  @synthesize sendTextView;
- @synthesize hud,historyFlag;
+ @synthesize hud,historyFlag,totalRows;
  - (void)viewDidLoad
  {
- [super viewDidLoad];
- [[NSNotificationCenter defaultCenter] addObserver:self
- selector:@selector(keyboardWillShow:)
- name:UIKeyboardWillShowNotification
- object:nil];
+     [super viewDidLoad];
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(keyboardWillShow:)
+                                                  name:UIKeyboardWillShowNotification
+                                                object:nil];
  
- [[NSNotificationCenter defaultCenter] addObserver:self
- selector:@selector(keyboardWillHide:)
- name:UIKeyboardWillHideNotification
- object:nil];
- sendTextView.delegate=self;
- 
- refreshControl = [[UIRefreshControl alloc]init];
- refreshControl.tag=1000;
- [self.tableview addSubview:refreshControl];
- [refreshControl addTarget:self action:@selector(refreshTable) forControlEvents:UIControlEventValueChanged];
- [self preferredStatusBarStyle];
- self.cellSelected=[NSMutableArray new];
- 
- // Do any additional setup after loading the view.
- [[NSNotificationCenter defaultCenter] addObserver:self
- selector:@selector(insertLoadMoreData:) name:NOTIFICATION_GET_ALL_MSGS_LOAD_MORE_DATA
- object:nil];
- [[NSNotificationCenter defaultCenter] addObserver:self
- selector:@selector(reloadData) name:NOTIFICATION_NEW_DATA_UPDATE
- object:nil];
- 
- UIView* navigationView=[self.view viewWithTag:1001];
- NSString* currentFeedbackType= [[NSUserDefaults standardUserDefaults] valueForKey:@"currentFeedbackType"];
- 
- UILabel* navigationTitleLabel=[navigationView viewWithTag:444];
- navigationTitleLabel.text=[NSString stringWithFormat:@"%@/Feedback Communication",currentFeedbackType];
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(keyboardWillHide:)
+                                                  name:UIKeyboardWillHideNotification
+                                                object:nil];
      
-//     dispatch_async(dispatch_get_main_queue(), ^{
-//         // make some UI changes
-//        sendTextView.text = @"Reply";
-//         sendTextView.textColor = [UIColor lightGrayColor];
-//     });
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(insertLoadMoreData:) name:NOTIFICATION_GET_ALL_MSGS_LOAD_MORE_DATA
+                                                object:nil];
      
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(reloadData) name:NOTIFICATION_NEW_DATA_UPDATE
+                                                object:nil];
+
+     
+     sendTextView.delegate=self;
+ 
+     refreshControl = [[UIRefreshControl alloc]init];
+     refreshControl.tag=1000;
+     [self.tableview addSubview:refreshControl];
+     [refreshControl addTarget:self action:@selector(refreshTable) forControlEvents:UIControlEventValueChanged];
+ 
+     [self preferredStatusBarStyle];
+     
+     self.cellSelected=[NSMutableArray new];
+ 
      heightArray=[[NSMutableArray alloc] init];
-    
+
+ // Do any additional setup after loading the view.
+ 
+     UIView* navigationView=[self.view viewWithTag:1001];
+     NSString* currentFeedbackType= [[NSUserDefaults standardUserDefaults] valueForKey:@"currentFeedbackType"];
+ 
+     UILabel* navigationTitleLabel=[navigationView viewWithTag:444];
+     navigationTitleLabel.text=[NSString stringWithFormat:@"%@/Feedback Communication",currentFeedbackType];
      
      for (int i=0; i<[AppPreferences sharedAppPreferences].FeedbackOrQueryDetailChatingObjectsArray.count; i++)
      {
-         [heightArray addObject:[NSString stringWithFormat:@"%d",40]];
+         [heightArray addObject:[NSString stringWithFormat:@"%d",20]];
      }
  }
  
@@ -95,65 +94,75 @@
  
  -(void)viewWillAppear:(BOOL)animated
  {
- [super viewWillAppear:YES];
- [[self.view viewWithTag:2001] setHidden:YES];
- 
- [[self.view viewWithTag:2001] setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
- 
- [self setHeaderForTableView];
- 
- sendTextView.layer.cornerRadius=4.0f;
- sendTextView.layer.borderColor=[UIColor grayColor].CGColor;
- sendTextView.layer.borderWidth=1.0f;
- [[NSNotificationCenter defaultCenter] addObserver:self
- selector:@selector(getLatestRecord:) name:NOTIFICATION_SEND_UPDATED_RECORDS
- object:nil];
- [tableview reloadData];
-
- FeedbackChatingCounter* feedObject= [app.FeedbackOrQueryDetailChatingObjectsArray objectAtIndex:0];
- [[Database shareddatabase] updateReadStatus:feedObject.soNumber feedbackType:[NSString stringWithFormat:@"%d",feedObject.feedbackType]];
- 
- historyFlag=2;
- 
-
+     [super viewWillAppear:YES];
      
+     [[self.view viewWithTag:2001] setHidden:YES];//email ids popup
+ 
+     [[self.view viewWithTag:2001] setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
+ 
+     [self setHeaderForTableView];
+ 
+     sendTextView.layer.cornerRadius=4.0f;
+     sendTextView.layer.borderColor=[UIColor grayColor].CGColor;
+     sendTextView.layer.borderWidth=1.0f;
+     
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(getLatestRecord:) name:NOTIFICATION_SEND_UPDATED_RECORDS
+                                                object:nil];
+
+      [tableview reloadData];
+
+     FeedbackChatingCounter* feedObject= [app.FeedbackOrQueryDetailChatingObjectsArray objectAtIndex:0];
+     
+     [[Database shareddatabase] updateReadStatus:feedObject.soNumber feedbackType:[NSString stringWithFormat:@"%d",feedObject.feedbackType]];
+ 
+     historyFlag=2;
+     loadedFirstTime=YES;
      self.numberOfLines=1;
- [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_NEW_DATA_UPDATE object:nil];//messages read,now update prev 2 views
+     totalRows=[AppPreferences sharedAppPreferences].FeedbackOrQueryDetailChatingObjectsArray.count;
      
+     [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_NEW_DATA_UPDATE object:nil];//messages read,now update prev 2 views
  
  }
- 
+-(void)viewDidAppear:(BOOL)animated
+{
+    [self.tableview reloadData];//reload for proper webview
+    [self performSelector:@selector(keyboardWillShow:) withObject:nil afterDelay:0.3];//goto the botom of table after loading WV
+    
+    //    [self keyboardWillShow:nil];
+}
  -(void)setHeaderForTableView
  {
- sendTextView.delegate=self;
- UILabel* subjectLabel=(UILabel*)[self.view viewWithTag:100];
- UILabel* SONumberLabel=(UILabel*)[self.view viewWithTag:101];
- UILabel* dateOfFeedLabel=(UILabel*)[self.view viewWithTag:102];
+     sendTextView.delegate=self;
+     app=[AppPreferences sharedAppPreferences];
+
+     UILabel* subjectLabel=(UILabel*)[self.view viewWithTag:100];
+     UILabel* SONumberLabel=(UILabel*)[self.view viewWithTag:101];
+     UILabel* dateOfFeedLabel=(UILabel*)[self.view viewWithTag:102];
  
- app=[AppPreferences sharedAppPreferences];
- NSArray* separatedSO=[[NSMutableArray alloc]init];
- FeedbackChatingCounter *allMessageObj=[app.FeedbackOrQueryDetailChatingObjectsArray lastObject];
- //-----------setSubject---------//
- subjectLabel.text=allMessageObj.emailSubject;
+     NSArray* separatedSO=[[NSMutableArray alloc]init];
+     FeedbackChatingCounter *allMessageObj=[app.FeedbackOrQueryDetailChatingObjectsArray lastObject];
+     //-----------setSubject---------//
+     subjectLabel.text=allMessageObj.emailSubject;
  
- //------setSONumber----------------//
- NSString* soNumber= allMessageObj.soNumber;
- separatedSO=[soNumber componentsSeparatedByString:@"#@"];
- NSString* soNumr=[separatedSO objectAtIndex:0];
- NSString* avaya=[separatedSO objectAtIndex:1];
- NSString* Doc=[separatedSO objectAtIndex:2];
+     //------setSONumber----------------//
+     NSString* soNumber= allMessageObj.soNumber;
+     separatedSO=[soNumber componentsSeparatedByString:@"#@"];
+     NSString* soNumr=[separatedSO objectAtIndex:0];
+     NSString* avaya=[separatedSO objectAtIndex:1];
+     NSString* Doc=[separatedSO objectAtIndex:2];
  
- SONumberLabel.text=[NSString stringWithFormat:@"SO No:%@\nAvaya Id:%@\nDocument Id:%@",soNumr,avaya,Doc];
+     SONumberLabel.text=[NSString stringWithFormat:@"SO No:%@\nAvaya Id:%@\nDocument Id:%@",soNumr,avaya,Doc];
  
- //------setDate----------------//
+     //------setDate----------------//
  
- NSString* dd=allMessageObj.dateOfFeed;
- NSArray *components = [dd componentsSeparatedByString:@" "];
- NSString *date = components[0];
- NSString *time = components[1];
+     NSString* dd=allMessageObj.dateOfFeed;
+     NSArray *components = [dd componentsSeparatedByString:@" "];
+     NSString *date = components[0];
+     NSString *time = components[1];
  
- dateOfFeedLabel.text=[NSString stringWithFormat:@"%@\n%@",date,time];
- 
+     dateOfFeedLabel.text=[NSString stringWithFormat:@"%@\n%@",date,time];
+     
  }
  
  #pragma mark:Data insertion and reload
@@ -162,65 +171,91 @@
  -(void)refreshTable
  {
      
- NSString* userFrom= [[NSUserDefaults standardUserDefaults] valueForKey:@"userFrom"];
- NSString* userTo=   [[NSUserDefaults standardUserDefaults] valueForKey:@"userTo"];
- FeedbackChatingCounter* feedObject= [app.FeedbackOrQueryDetailChatingObjectsArray objectAtIndex:0];
- if (feedObject!=NULL)
- {
- [[APIManager sharedManager] getNotificationLoadMoreDataForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"]  andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"] SONumber:feedObject.soNumber feedbackType:[NSString stringWithFormat:@"%d",feedObject.feedbackType] userFrom:userFrom userTo:userTo] ;
- }
+     NSString* userFrom= [[NSUserDefaults standardUserDefaults] valueForKey:@"userFrom"];
+     
+     NSString* userTo=   [[NSUserDefaults standardUserDefaults] valueForKey:@"userTo"];
+     
+     FeedbackChatingCounter* feedObject= [app.FeedbackOrQueryDetailChatingObjectsArray objectAtIndex:0];
+     
+     if (feedObject!=NULL)
+     {
+         [[APIManager sharedManager] getNotificationLoadMoreDataForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"]  andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"] SONumber:feedObject.soNumber feedbackType:[NSString stringWithFormat:@"%d",feedObject.feedbackType] userFrom:userFrom userTo:userTo] ;
+     }
  
- }
+}
+
+//insert fetched data into db after getting response
+-(void)insertLoadMoreData:(NSNotification*)data
+{
+    [[Database shareddatabase] insertFeedcomNotifiationData:data.object readStatusflag:false];
+    
+}
+
  
  //reload data from DB after getting notified
- -(void)reloadData
- {
- FeedbackChatingCounter* feedObject= [app.FeedbackOrQueryDetailChatingObjectsArray lastObject];
+-(void)reloadData
+{
  
-     
- if (feedObject.statusId==2)
- {
- [self.view viewWithTag:202].userInteractionEnabled=NO;
- UILabel* statusLabel= [self.view viewWithTag:201];
- statusLabel.textColor=[UIColor redColor];
- statusLabel.text=@"Closed";
- }
- [[Database shareddatabase] getDetailMessagesofFeedbackOrQuery:feedObject.feedbackType :feedObject.soNumber];
+     FeedbackChatingCounter* feedObject= [app.FeedbackOrQueryDetailChatingObjectsArray lastObject];
+ 
+     if (feedObject.statusId==2)
+     {
+
+         [self.view viewWithTag:202].userInteractionEnabled=NO;
+ 
+         UILabel* statusLabel= [self.view viewWithTag:201];
+ 
+         statusLabel.textColor=[UIColor redColor];
+ 
+         statusLabel.text=@"Closed";
+ 
+     }
+
+     [[Database shareddatabase] getDetailMessagesofFeedbackOrQuery:feedObject.feedbackType :feedObject.soNumber];
      
      heightArray=nil;
+     
      heightArray=[[NSMutableArray alloc] init];
      
-     
-     for (int i=0; i<[AppPreferences sharedAppPreferences].FeedbackOrQueryDetailChatingObjectsArray.count; i++)
+     for (int i=0; i<app.FeedbackOrQueryDetailChatingObjectsArray.count; i++)
      {
          [heightArray addObject:[NSString stringWithFormat:@"%d",40]];
      }
 
- [refreshControl endRefreshing];
- //sendTextView.text=@"Reply";
-    // sendTextView.textColor=[UIColor lightGrayColor];
-      [self keyboardWillShow:nil];
-     
-     [self.tableview reloadData];
-     [self performSelector:@selector(web) withObject:nil afterDelay:0.5];
-
+     [refreshControl endRefreshing];
     
-  //    [self.tableview reloadData];
-
- }
-
--(void)viewDidAppear:(BOOL)animated
-{
+    indexPathArray=[NSMutableArray new];
+    for (int i=0; i<[AppPreferences sharedAppPreferences].FeedbackOrQueryDetailChatingObjectsArray.count-totalRows; i++)
+    {
+       NSIndexPath* indexPath= [NSIndexPath indexPathForRow:totalRows+i inSection:0];
+        [indexPathArray addObject:indexPath];
+    }
+    
     [self.tableview reloadData];
-    [self keyboardWillShow:nil];
+  //  [self.tableview beginUpdates];
+  //  [self.tableview insertRowsAtIndexPaths:indexPathArray withRowAnimation:UITableViewRowAnimationNone];
+  //  [self.tableview endUpdates];
+    //[self keyboardWillShow:nil];
+     if (loadedFirstTime)
+     {
+         loadedFirstTime=false;
+     }
+     else
+     {
+         
+     }
+    
+
 }
- //insert fetched data into db after getting response
- -(void)insertLoadMoreData:(NSNotification*)data
- {
- [[Database shareddatabase] insertFeedcomNotifiationData:data.object readStatusflag:false];
- 
- }
- 
+
+//- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
+//{
+//    [UIView performWithoutAnimation:^{
+//        [cell layoutIfNeeded];
+//    }];
+//}
+
+
  #pragma mark:TableView bottom position
  
  //to go at bottom of tableview
@@ -262,6 +297,7 @@
  }
  
 
+
  
  //get latest records and insert in db after sending our text
  - (void)getLatestRecord:(NSNotification *)notificationData
@@ -281,7 +317,9 @@
          if (feedObject.statusId==2)
          {
              [self.view viewWithTag:202].userInteractionEnabled=NO;
+             
              UILabel* statusLabel= [self.view viewWithTag:201];
+             
              statusLabel.textColor=[UIColor redColor];
  
              statusLabel.text=@"Closed";
@@ -342,7 +380,7 @@
          UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
          FeedbackChatingCounter* feedObject= [app.FeedbackOrQueryDetailChatingObjectsArray objectAtIndex:indexPath.row];
  
- 
+         NSLog(@"%d",cell.tag);
          Database* db=[Database shareddatabase];
          NSString* userRole=[db getUserIdFromUserNameWithRoll1:feedObject.userTo];
          if (cell!=nil)
@@ -358,11 +396,11 @@
          if (feedObject.statusId==2)
          {
          }
-         UILabel* userName= (UILabel*)[cell viewWithTag:50];
+         UILabel* userName= (UILabel*)[cell viewWithTag:5000];
          userName.text=feedObject.userFrom;
  
          //    UILabel* feedText= (UILabel*)[cell viewWithTag:51];
-         UIWebView* feedTextWebView1= (UIWebView*)[cell viewWithTag:51];
+         UIWebView* feedTextWebView1= (UIWebView*)[cell viewWithTag:5100];
          UIWebView* feedTextWebView= [[UIWebView alloc]initWithFrame:CGRectMake(feedTextWebView1.frame.origin.x, feedTextWebView1.frame.origin.y, feedTextWebView1.frame.size.width, feedTextWebView1.frame.size.height)];
  
          //feedTextWebView.frame=feedTextWebView.frame;
@@ -379,37 +417,24 @@
          feedTextWebView.scrollView.delegate=self;
          feedTextWebView.backgroundColor=[UIColor clearColor];
          [feedTextWebView setOpaque:NO];
-         feedTextWebView.scrollView.bounces = NO;
- 
-         feedTextWebView.scrollView.scrollEnabled = NO;
-         feedTextWebView.scrollView.bounces = NO;   // NSString* detailMessage=[self    stringByStrippingHTML:feedObject.detailMessage];
+         feedTextWebView.scrollView.bounces=YES;
+         feedTextWebView.scrollView.scrollEnabled = YES;
+         //feedTextWebView.scrollView.bounces = NO;   // NSString* detailMessage=[self    stringByStrippingHTML:feedObject.detailMessage];
          //NSString* detailMessage=[feedObject.detailMessage stringByEncodingHTMLEntities];
          NSString* detailMessage=feedObject.detailMessage;
  
-//         CGRect frame = feedTextWebView.frame;
-//         frame.size.height = 1;
-//         feedTextWebView.frame = frame;
-//         CGSize fittingSize = [feedTextWebView sizeThatFits:CGSizeZero];
-//         frame.size = fittingSize;
-//         feedTextWebView.frame = frame;
-         //detailMessage = [detailMessage stringByReplacingOccurrencesOfString:@"\n" withString:@"<br/>"];
+
          detailMessage=[detailMessage stringByDecodingHTMLEntities];
-         // detailMessage = [detailMessage stringByReplacingOccurrencesOfString:@"\n" withString:@"%0A"];
- 
-         // NSString* detailMessage=feedObject.detailMessage;
-         
-  
-         //   [feedTextWebView loadData:[detailMessage dataUsingEncoding:NSUTF8StringEncoding] MIMEType:@"text/html"    textEncodingName:@"UTF-8" baseURL:nil];
-         // [feedTextWebView loadHTMLString:detailMessage baseURL:nil];
          
          for (UIView* view in [cell subviews])
          {
-             if ([view isKindOfClass:[UIWebView class] ] && !(view.tag==51))
+             if ([view isKindOfClass:[UIWebView class] ] && !(view.tag==5100))
              {
                  [view removeFromSuperview];
              }
          }
-         
+         feedTextWebView.scrollView.alwaysBounceVertical = NO;
+         feedTextWebView.scrollView.alwaysBounceHorizontal = YES;
          
          NSData *data = [detailMessage dataUsingEncoding:NSNonLossyASCIIStringEncoding];
          NSString *valueUnicode = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
@@ -419,11 +444,13 @@
          NSString *valueEmoj = [[NSString alloc] initWithData:dataa encoding:NSNonLossyASCIIStringEncoding];
  
          //NSString *html = @"<html><head></head><body>The Meaning of Life<p>...really is <b>42</b>!</p></body></html>";
-         
-         NSString* htmlText=[NSString stringWithFormat:@"<html><head></head><body><p>%@</p></body></html>",valueEmoj];
-         
+         NSLog(@"%f",self.tableview.frame.size.width);
+//         NSString* htmlText=[NSString stringWithFormat:@"<html><head></head><body><p>%@</p></body></html>",valueEmoj];
+         NSString *htmlString = [NSString stringWithFormat:@"<html><head><style type='text/css'>html,body {margin: 0;padding: 10px;height: 100%;max-width: %fpx;}html {display: table;}body {display: table-cell;vertical-align: left;padding: 0px;text-align: left;-webkit-text-size-adjust: none; }</style></head><body><p>%@</p></body></html>​",feedTextWebView.frame.size.width,valueEmoj];
+        // div {max-width: %fpx;}
+[feedTextWebView sizeToFit];
           //[feedTextWebView  loadHTMLString:[NSString stringWithFormat:@"",htmlText] baseURL:nil];
-         [feedTextWebView loadHTMLString:htmlText baseURL:nil];
+         [feedTextWebView loadHTMLString:htmlString baseURL:nil];
 
         // [feedTextWebView reload];
          //[feedTextWebView stopLoading];
@@ -433,14 +460,14 @@
 //         counterObj.webViewValue=valueEmoj;
 //          [self performSelector:@selector(loadWebView:) withObject:counterObj afterDelay:1.0005];
          
-         UILabel* feedTime= (UILabel*)[cell viewWithTag:52];
+         UILabel* feedTime= (UILabel*)[cell viewWithTag:5200];
          NSString* dd=feedObject.dateOfFeed;
          NSArray *components = [dd componentsSeparatedByString:@" "];
          NSString *date = components[0];
          NSString *time = components[1];
          feedTime.text=[NSString stringWithFormat:@"%@   %@",date,time];
  
-         UILabel* attachmentLabel= (UILabel*)[cell viewWithTag:53];
+         UILabel* attachmentLabel= (UILabel*)[cell viewWithTag:5300];
          NSString* allAttachmentsNamesString=[self stringByStrippingHTML:feedObject.attachments];
          NSArray* attachmentsNamesArray=[allAttachmentsNamesString componentsSeparatedByString:@"#@$"];
  
@@ -467,7 +494,7 @@
                  counterGraphObj.attachmentArray=[NSArray arrayWithArray:attachmentsNamesArray];
                  counterGraphObj.cell=cell;
                  counterGraphObj.selectedIndex = (int)indexPath.row;
-                 [self performSelector:@selector(setCounterGraphLabel:) withObject:counterGraphObj afterDelay:0.0005];
+                 [self performSelector:@selector(setCounterGraphLabel:) withObject:counterGraphObj afterDelay:0.4];
              }
          }
  
@@ -516,20 +543,64 @@
  
  }
  }
-//-(void)loadWebView:(CounterGraph*)obj
-//{
-//    [obj.webView loadHTMLString:obj.webViewValue baseURL:nil];
-//
-//}
- //-(void)scrollViewDidScroll:(UIScrollView *)scrollView
- //{
- //    if ([scrollView.superview isKindOfClass:[UIWebView class]])
- //    {
- //        if (scrollView.contentOffset.y > 0  ||  scrollView.contentOffset.y < 0 )
- //            scrollView.contentOffset = CGPointMake(scrollView.contentOffset.x, 0);
- //    }
- //
- //}
+
+-(void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+    
+    if ([scrollView.superview isKindOfClass:[UIWebView class]])
+    {
+        CGFloat width = [UIScreen mainScreen].bounds.size.width;
+        NSLog(@"width %f",width);
+        NSLog(@"width more %f",scrollView.frame.size.width);
+
+        if (scrollView.frame.size.width<[UIScreen mainScreen].bounds.size.width)
+        {
+            scrollView.bounces=NO;
+            return;
+        }
+        if ((-scrollView.frame.origin.x)<(scrollView.frame.size.width-[UIScreen mainScreen].bounds.size.width))
+        {
+            if (scrollView.contentOffset.x > 0)
+            {
+                NSLog(@"offset more %f",scrollView.contentOffset.x);
+                NSLog(@"width more %f",scrollView.frame.size.width);
+                NSLog(@"x more %f",scrollView.frame.origin.x);
+                
+                scrollView.frame=CGRectMake(scrollView.frame.origin.x- scrollView.contentOffset.x, scrollView.frame.origin.y, scrollView.frame.size.width, scrollView.frame.size.height);
+                
+                
+                
+            }
+            
+        }
+        
+        if (scrollView.frame.origin.x<0)
+        {
+            if (scrollView.contentOffset.x < 0)
+            {
+                NSLog(@"offset less %f",scrollView.contentOffset.x);
+                NSLog(@"width less %f",scrollView.frame.size.width);
+                NSLog(@"x less %f",scrollView.frame.origin.x);
+                
+                // scrollView.contentOffset = CGPointMake(scrollView.frame.origin.x+ scrollView.contentOffset.x, scrollView.contentOffset.y);
+                scrollView.frame=CGRectMake(scrollView.frame.origin.x- scrollView.contentOffset.x, scrollView.frame.origin.y, scrollView.frame.size.width, scrollView.frame.size.height);
+                //scrollView.contentOffset = CGPointMake(scrollView.contentOffset.x, 0);
+                
+                
+            }
+            
+        }
+        
+        
+        
+    }
+    else
+    {
+        // NSLog(@"%f",scrollView.contentOffset.x);
+    }
+    
+    
+}
  - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
  {
  if (tableView==self.tableview)
@@ -578,7 +649,8 @@
  
      
      NSString* height=  [heightArray objectAtIndex:indexPath.row];
-     return [height intValue]+30+newFrame2.size.height;
+     //NSLog(@"newframe2 ht=%f",newFrame2.size.height);
+     return [height intValue]+newFrame2.size.height;
  // return 60+newFrame.size.height+newFrame1.size.height;
  //return 60 + h1+h2;
  //     NSLog(@"%f",feedTextWebView.frame.size.height);
@@ -609,11 +681,10 @@
  [self.popupTableView reloadData];
  }
  }
- 
+
  - (void)webViewDidFinishLoad:(UIWebView *)aWebView
  {
- //    [tableview beginUpdates];
- //    [tableview endUpdates];
+ 
      CGRect frame = aWebView.frame;
      frame.size.height = 1;
      aWebView.frame = frame;
@@ -621,35 +692,38 @@
      frame.size = fittingSize;
      aWebView.frame = frame;
      
-     //         [tableview beginUpdates];
-     //         [tableview endUpdates];
-     //    CGRect frame = aWebView.frame;
-     //    frame.size.height = 1;
-     //    aWebView.frame = frame;
-     //    CGSize fittingSize = [aWebView sizeThatFits:CGSizeZero];
-     //    frame.size = fittingSize;
-     //    aWebView.frame = frame;
-     // self.cellSize = fittingSize.height;
      
-     //NSString *output = [webView stringByEvaluatingJavaScriptFromString:@"document.body. scrollHeight;"];
-     //    feedTextWebViewForHeight=aWebView;
+     
+    
+     
      
      float sourcesWebViewHeight = [[aWebView stringByEvaluatingJavaScriptFromString:@"document.documentElement.scrollHeight"] floatValue];
-     
+     int w = aWebView.scrollView.contentSize.width;
+//     NSString *bodyStyleVertical = @"document.getElementsByTagName('body')[0].style.verticalAlign = 'middle';";
+//     NSString *mapStyle = @"document.getElementById('mapid').style.margin = 'auto';";
+//     
+//     [aWebView stringByEvaluatingJavaScriptFromString:bodyStyleVertical];
+//     [aWebView stringByEvaluatingJavaScriptFromString:mapStyle];
+
      [heightArray replaceObjectAtIndex:aWebView.tag withObject:[NSString stringWithFormat:@"%f",sourcesWebViewHeight]];
      [self.tableview beginUpdates];
      [self.tableview endUpdates];
-     
+     if (aWebView.tag==app.FeedbackOrQueryDetailChatingObjectsArray.count-1)
+     {
+         [self keyboardWillShow:nil];
+     }
+
+     if (aWebView.scrollView.frame.size.width<[UIScreen mainScreen].bounds.size.width)
+     {
+         aWebView.scrollView.bounces=NO;
+         return;
+     }
      NSLog(@"%f", sourcesWebViewHeight);
     // [self performSelector:@selector(web:) withObject:aWebView afterDelay:1.0];
   
  }
 
--(void)web
-{
-   [self.tableview reloadData];
 
-}
  #pragma mark:height for cell;supporting methods
  
  -(void)setCounterGraphLabel:(CounterGraph*)counterGraphObj
@@ -836,7 +910,7 @@
  {
  newFrame.size.height = 20.0f;
  }
-     if (attachmentName==NULL)
+     if ([attachmentName isEqual:@""])
      {
          newFrame.size.height = 0.0f;
          
@@ -1151,7 +1225,7 @@ sendTextView.text=@"";
 
 - (void) moveViewUp: (BOOL) isUp
 {
-    const int movementDistance = 230; // tweak as needed
+    const int movementDistance = 220; // tweak as needed
     const float movementDuration = 0.3f; // tweak as needed
     
     if (isUp)
@@ -1310,6 +1384,10 @@ sendTextView.text=@"";
     {
         if (![[NSFileManager defaultManager] fileExistsAtPath:filePath])
             [[NSFileManager defaultManager] createDirectoryAtPath:filePath withIntermediateDirectories:NO attributes:nil error:&error]; //Create folder
+        
+        hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+        hud.tag=1234567;
+        hud.label.text = NSLocalizedString(@"Downloading..", @"HUD Loading title");
         [self startReceive:sender];
         
     }
@@ -1351,7 +1429,8 @@ sendTextView.text=@"";
                                                                 withString:@"%40"];
     
     
-    
+    downloadableAttachmentName = [downloadableAttachmentName stringByReplacingOccurrencesOfString:@" "
+                                                                                       withString:@"%20"];
     NSString* urlString=[NSString stringWithFormat:@"ftp://%@:%@%@%@%@",username,password,FTPHostName,FTPFilesFolderName,downloadableAttachmentName];
     
     // NSURL *url = [NSURL URLWithString:@"ftp://demoFtp%40pantudantukids.com:asdf123@pantudantukids.com:21/TEST/1469363039819Untitled.png"];
@@ -1368,7 +1447,7 @@ sendTextView.text=@"";
     NSURLSessionDownloadTask *downloadTask = [session downloadTaskWithURL:url];
     [downloadTask resume];
     
-    [self performSelectorOnMainThread:@selector(showHud) withObject:nil waitUntilDone:NO];
+    //[self performSelectorOnMainThread:@selector(showHud) withObject:nil waitUntilDone:NO];
     
 }
 
@@ -1376,8 +1455,20 @@ sendTextView.text=@"";
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
 didCompleteWithError:(nullable NSError *)error
 {
-    [self performSelectorOnMainThread:@selector(hideHud) withObject:nil waitUntilDone:NO];
     NSLog(@"errors %@",error.debugDescription);
+
+    if (error!=NULL)
+    {
+        [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Download failed!" withMessage:@"Please try again" withCancelText:@"Cancel" withOkText:@"Ok" withAlertTag:1000];
+    }
+    
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        
+        UIView* view=[self.view viewWithTag:1234567];
+        [view removeFromSuperview];
+    });
+
 }
 - (void)URLSession:(nonnull NSURLSession *)session task:(nonnull NSURLSessionTask *)task didReceiveChallenge:(nonnull NSURLAuthenticationChallenge *)challenge completionHandler:(nonnull void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * __nullable))completionHandler
 {
@@ -1387,13 +1478,15 @@ didCompleteWithError:(nullable NSError *)error
 {
     NSData *data = [NSData dataWithContentsOfURL:location];
     NSString* destpath=[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/Attachments/%@",downloadableAttachmentName]];
-    
+    downloadableAttachmentName = [downloadableAttachmentName stringByReplacingOccurrencesOfString:@"%20"
+                                                                                       withString:@" "];
     [data writeToFile:destpath atomically:YES];
     //[hud hideAnimated:YES];
     //[self performSelectorOnMainThread:@selector(hideHud) withObject:nil waitUntilDone:NO];
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        
+        [self.tableview reloadData];
+
         //[self.progressView setHidden:YES];
         //[self.imageView setImage:[UIImage imageWithData:data]];
     });
@@ -1406,20 +1499,36 @@ didCompleteWithError:(nullable NSError *)error
 {
     float progress = (double)totalBytesWritten / (double)totalBytesExpectedToWrite;
     NSLog(@"progress %f",progress);
-    NSString* progressPercent= [NSString stringWithFormat:@"Downloading..%f",progress*100];
+    
+    NSString* progressPercent= [NSString stringWithFormat:@"%f",progress*100];
+    
+    int progressPercentInInt=[progressPercent intValue];
+    
+    progressPercent=[NSString stringWithFormat:@"%d",progressPercentInInt];
+    
+    NSString* progressShow= [NSString stringWithFormat:@"Downloading..%@%%",progressPercent];
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         
+//        UIView* view=[self.view viewWithTag:1234567];
         
-        if (progress==1)
+//        if (![view viewWithTag:1234567])
+//        {
+//            hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+//            hud.tag=1234567;
+//            //[hud hideAnimated:YES];
+//            
+//            
+//            hud.minSize = CGSizeMake(150.f, 100.f);
+//        }
+        hud.label.text = NSLocalizedString(progressShow, @"HUD Loading title");
+        if ([progressPercent isEqual:@"100"])
         {
-            [hud hideAnimated:YES];
+            UIView* view=[self.view viewWithTag:1234567];
+            [view removeFromSuperview];
         }
-        //        hud = [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
-        //        [hud hideAnimated:YES];
-        //
-        //        hud.label.text = NSLocalizedString(progressPercent, @"HUD Loading title");
-        //        hud.minSize = CGSizeMake(150.f, 100.f);
         //[self.progressView setProgress:progress];
+   
     });
 }
 -(void)hideHud
@@ -1500,12 +1609,18 @@ didCompleteWithError:(nullable NSError *)error
     //[vc prepareForSearchBar];
     //[vc reloadData];
     //
+    loadedFirstTime=NO;
     [[[UIApplication sharedApplication].keyWindow viewWithTag:901] removeFromSuperview];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_ADD_FEEDBACK_BUTTON object:nil];
     
-    FeedbackChatingCounter* feedObject= [app.FeedbackOrQueryDetailChatingObjectsArray objectAtIndex:0];
-    [[Database shareddatabase] updateReadStatus:feedObject.soNumber feedbackType:[NSString stringWithFormat:@"%d",feedObject.feedbackType]];
+    if (app.FeedbackOrQueryDetailChatingObjectsArray.count>0)
+    {
+        FeedbackChatingCounter* feedObject= [app.FeedbackOrQueryDetailChatingObjectsArray objectAtIndex:0];
+        [[Database shareddatabase] updateReadStatus:feedObject.soNumber feedbackType:[NSString stringWithFormat:@"%d",feedObject.feedbackType]];
+    }
+    
+    
     [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_NEW_DATA_UPDATE object:nil];
 
     

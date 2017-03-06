@@ -257,29 +257,36 @@
     totalCounter = feedCounterObj.totalCounter;
     closedCounter=feedCounterObj.closedCounter;
 
-   UIImageView* imageView= [cell viewWithTag:211];
-    if (imageView.image!=NULL)
+//   UIImageView* imageView= [cell viewWithTag:211];
+//    if (imageView.image!=NULL)
+//    {
+//        imageView.image=NULL;
+//    }
+//    UIImageView* readStatusImageView= [cell viewWithTag:211];
+//    if (feedCounterObj.readStatus==1)
+//    {
+//        readStatusImageView.image=[UIImage imageNamed:@"Star"];
+//    }
+    
+    UIView* circleReferenceview=[cell viewWithTag:500];
+    if (!circleReferenceview.isHidden)
     {
-        imageView.image=NULL;
+        [circleReferenceview setHidden:YES];
     }
-    UIImageView* readStatusImageView= [cell viewWithTag:211];
+    
     if (feedCounterObj.readStatus==1)
     {
-        //UIImageView* starImageView=[[UIImageView alloc]initWithFrame:readStatusImageView.frame];
-        //starImageView.tag=212;
-        readStatusImageView.image=[UIImage imageNamed:@"Star"];
-        //[cell addSubview:starImageView];
+        circleReferenceview.layer.cornerRadius = 13 / 2.0;
+        
+        circleReferenceview.backgroundColor=[UIColor colorWithRed:52/255.0 green:175/255.0 blue:35/255.0 alpha:1];
+        [circleReferenceview setHidden:NO];
     }
+
     UILabel* countLabel=(UILabel*)[cell viewWithTag:113];
-//    if (counter>12)
-//    {
-//        countLabel.text=@"12+";
-//    }
-    //else
+
     countLabel.text=[NSString stringWithFormat:@"%ld", totalCounter];
    
     counterGraphLabel=[cell viewWithTag:111];
-    //counterGraphLabel.textColor=[UIColor clearColor];
        
     if (totalCounter>20)
     {

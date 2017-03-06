@@ -14,7 +14,6 @@
 #import "CompanyNamesViewController.h"
 #import "Firebase.h"
 #import <FirebaseAnalytics/FirebaseAnalytics.h>
-
 @import FirebaseMessaging;
 
 @interface AppDelegate ()
@@ -23,7 +22,7 @@
 
 @implementation AppDelegate
 
-@synthesize navController,feedcomCommunicationCounterValue;
+@synthesize navController,feedcomCommunicationCounterValue,tappedOnNotification;
 
 UIStoryboard *mainStoryboard;
 
@@ -36,6 +35,8 @@ UINavigationController *navigationController;
     AppPreferences* app=[AppPreferences sharedAppPreferences];
     
     [app startReachabilityNotifier];
+    
+    //[NSThread sleepForTimeInterval:5]  ;
     
     [FIRApp configure];
     
@@ -257,6 +258,13 @@ UINavigationController *navigationController;
 
     NSLog(@"%@",error);
 }
+
+-(void)start
+{
+    [[AppPreferences sharedAppPreferences] startReachabilityNotifier];
+
+ 
+}
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo
 fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
 {
@@ -264,12 +272,24 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
     // this callback will not be fired till the user taps on the notification launching the application.
     // TODO: Handle data of notification
         // Print message ID.
-    //[[AppPreferences sharedAppPreferences] startReachabilityNotifier];
-
+    Reachability *networkReachability = [Reachability reachabilityForInternetConnection];
+    NetworkStatus networkStatus = [networkReachability currentReachabilityStatus];
+    
+        if (networkStatus == NotReachable)
+        {
+        
+           
+         }
+        else
+        {
+            
+            [AppPreferences sharedAppPreferences].isReachable=YES;
+    
+        }
+    //[NSThread sleepForTimeInterval:10];
     NSError* error;
     
     NSDictionary *notifMessageDict = [[userInfo objectForKey:@"aps"] objectForKey:@"alert"];
-    
     NSString* feedcomCommunicationCounterString=[notifMessageDict valueForKey:@"body"];
     
     NSData *feedcomCommunicationCounterData = [feedcomCommunicationCounterString dataUsingEncoding:NSUTF8StringEncoding];
@@ -305,11 +325,20 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
     
     if (application.applicationState== UIApplicationStateActive)
     {
-    
+   // NSString* sound=@"default.mp3";
         // Nothing to do if applicationState is Inactive, the iOS already displayed an alert view.
 //        NSString *notifMessage = [[userInfo objectForKey:@"aps"] objectForKey:@"alert"];
    
         //Define notifView as UIView in the header file
+//        NSURL *url = [NSURL fileURLWithPath:[NSString stringWithFormat:@"%@/%@", [[NSBundle mainBundle] resourcePath],sound]];
+//        
+//        AVAudioPlayer *newAudioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:NULL];
+//        audioPlayer=newAudioPlayer;
+//        //self.audioPlayer = newAudioPlayer;
+//        audioPlayer.numberOfLoops = -1;
+//        [audioPlayer play];
+    
+        AudioServicesPlaySystemSound(1315);
         [_notifView removeFromSuperview]; //If already existing
         
         _notifView = [[UIView alloc] initWithFrame:CGRectMake(0, -70, self.window.frame.size.width, 80)];
@@ -334,7 +363,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
         }
         else
         {
-            myLabel.text = SONumber;
+            myLabel.text = [NSString stringWithFormat:@"New Message,SO No:%@",SONumber];
         }
         [myLabel setTextColor:[UIColor whiteColor]];
         [myLabel setNumberOfLines:0];
@@ -362,21 +391,43 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
             
             [_notifView setFrame:CGRectMake(0, 0, self.window.frame.size.width, 60)];
             
-        } completion:^(BOOL finished) {
+        } completion:^(BOOL finished)
+        {
+//            if (tappedOnNotification==true)
+//            {
             
+                
+//            }
+//            else
+//            {
+//                [self performSelector:@selector(dismissNotifFromScreen) withObject:nil afterDelay:3.0];
+//                
+//            }
+
             
         }];
         
         
         //Remove from top view after 5 seconds
-        [self performSelector:@selector(dismissNotifFromScreen) withObject:nil afterDelay:3.0];
-        
+//        if (tappedOnNotification==true)
+//        {
+//            //tappedOnNotification=false;
+//
+//        }
+//        else
+//        {
+            [self performSelector:@selector(dismissNotifFromScreen) withObject:nil afterDelay:3.0];
+//            tappedOnNotification=false;
+//  
+//        }
+//
     completionHandler(UIBackgroundFetchResultNewData);
     }
     
     else
     {
-        [[AppPreferences sharedAppPreferences] startReachabilityNotifier];
+       
+        //[NSThread sleepForTimeInterval:3];
         NSString* userFrom= [[NSUserDefaults standardUserDefaults] valueForKey:@"userFrom"];
         UITabBarController* tabBarController =[UIApplication sharedApplication].keyWindow.rootViewController;
 
@@ -433,6 +484,8 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
             NSLog(@"%@",[UIApplication sharedApplication].keyWindow.rootViewController.tabBarController);
             
             [tabBarController setSelectedIndex:0];
+            
+            
             [[APIManager sharedManager] getNotificationDataForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"]  andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"] SONumber:SONumber feedbackType:issueType userFrom:companyFrom userTo:companyTo] ;
         }
         
@@ -489,13 +542,81 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
     
 }
 
-- (void)dismissNotifFromScreen1{
-    
-    [UIView animateWithDuration:1.0 delay:.1 usingSpringWithDamping:0.5 initialSpringVelocity:0.1 options:UIViewAnimationOptionCurveEaseIn animations:^{
+- (void)dismissNotifFromScreen1
+{
+   // tappedOnNotification=true;
+   // NSLog(@"tapped");
+    [UIView animateWithDuration:0.3 delay:0 usingSpringWithDamping:0.5 initialSpringVelocity:0.1 options:UIViewAnimationOptionCurveEaseIn animations:^{
         
-        //[_notifView setFrame:CGRectMake(0, -70, self.window.frame.size.width, 60)];
-//        [_notifView setFrame:CGRectMake(0, -70, self.window.frame.size.width, 60)];
-//        
+        [_notifView setFrame:CGRectMake(0, -70, self.window.frame.size.width, 60)];
+       // [_notifView setFrame:CGRectMake(0, -70, self.window.frame.size.width, 60)];
+        
+        NSString* documentId,*reportId,*momId,*issueType,*SONumber,*companyFrom,*companyTo;
+        if ([feedcomCommunicationCounterValue valueForKey:@"ReportId"] !=nil)
+        {
+            reportId=[feedcomCommunicationCounterValue valueForKey:@"ReportId"];
+        }
+        else if([feedcomCommunicationCounterValue valueForKey:@"DocumentId"] !=nil)
+        {
+            documentId=[feedcomCommunicationCounterValue valueForKey:@"DocumentId"];
+        }
+        else if([feedcomCommunicationCounterValue valueForKey:@"MomId"] !=nil)
+        {
+            momId=[feedcomCommunicationCounterValue valueForKey:@"MomId"];
+        }
+        else
+        {
+            issueType= [feedcomCommunicationCounterValue valueForKey:@"IssueType"];
+            SONumber= [feedcomCommunicationCounterValue valueForKey:@"SoNumber"];
+            companyFrom= [feedcomCommunicationCounterValue valueForKey:@"CompanyFrom"];
+            companyTo= [feedcomCommunicationCounterValue valueForKey:@"CompanyTo"];
+        }
+
+        UITabBarController* tabBarController =[UIApplication sharedApplication].keyWindow.rootViewController;
+        NSString* userFrom= [[NSUserDefaults standardUserDefaults] valueForKey:@"userFrom"];
+
+        if ([feedcomCommunicationCounterValue valueForKey:@"ReportId"] !=nil)
+        {
+           
+                [tabBarController setSelectedIndex:1];
+            
+//            reportId=[feedcomCommunicationCounterValue valueForKey:@"ReportId"];
+//            
+//            if (!([[NSUserDefaults standardUserDefaults] valueForKey:@"userObject"] ==NULL))
+//            {
+//                [[APIManager sharedManager] getReoprtForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"] reportId:reportId];
+//            }
+            
+        }
+        else if([feedcomCommunicationCounterValue valueForKey:@"DocumentId"] !=nil)
+        {
+           
+                [tabBarController setSelectedIndex:1];
+            
+//            documentId=[feedcomCommunicationCounterValue valueForKey:@"DocumentId"];
+//            [[APIManager sharedManager] getDocumentsForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"] documentId:documentId];
+        }
+        else if([feedcomCommunicationCounterValue valueForKey:@"MomId"] !=nil)
+        {
+            
+           
+                [tabBarController setSelectedIndex:2];
+                        
+//            momId=[feedcomCommunicationCounterValue valueForKey:@"MomId"];
+//            [[APIManager sharedManager] getMOMForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"] andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"] momId:momId];
+        }
+        else
+        {
+            NSLog(@"%@",[UIApplication sharedApplication].keyWindow.rootViewController.tabBarController);
+            
+            [tabBarController setSelectedIndex:0];
+            
+            
+//            [[APIManager sharedManager] getNotificationDataForUsername:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"]  andPassword:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"] SONumber:SONumber feedbackType:issueType userFrom:companyFrom userTo:companyTo] ;
+        }
+        
+
+//
 //        NSString* issueType= [feedcomCommunicationCounterValue valueForKey:@"IssueType"];
 //        NSString* SONumber= [feedcomCommunicationCounterValue valueForKey:@"SoNumber"];
 //        NSString* companyFrom= [feedcomCommunicationCounterValue valueForKey:@"CompanyFrom"];

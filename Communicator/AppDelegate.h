@@ -7,14 +7,17 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <AVFoundation/AVFoundation.h>
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
-
-
+{
+    AVAudioPlayer* audioPlayer;
+}
 
 @property (strong, nonatomic) UIWindow *window;
 @property (strong, nonatomic) UINavigationController *navController;
 @property (strong, nonatomic) UIView *notifView;
 @property(nonatomic,strong)NSDictionary *feedcomCommunicationCounterValue;
+@property(nonatomic)BOOL tappedOnNotification;
 @end
 

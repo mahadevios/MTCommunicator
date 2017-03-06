@@ -23,6 +23,7 @@
     NSMutableArray* webViewArray;
     NSMutableArray* indexPathArray;
     BOOL reloaded;
+    BOOL loadedFirstTime;
 
 }
 
@@ -31,6 +32,8 @@
 @property (nonatomic, copy,   readwrite) NSString *        filePath;
 @property (nonatomic, strong, readwrite) NSOutputStream *  fileStream;
 @property (nonatomic,strong)NSMutableArray* cellSelected;
+@property (nonatomic,strong)NSMutableArray* indexPathArray;
+
 @property (nonatomic) int historyFlag;
 @property (weak, nonatomic) MBProgressHUD *hud;
 @property (nonatomic)int numberOfLines;
@@ -39,7 +42,7 @@
 
 @property (weak, nonatomic) IBOutlet UITableView *popupTableView;
 @property (weak, nonatomic) IBOutlet UITableView *tableview;
-
+@property (nonatomic) long totalRows;
 
 - (IBAction)sendFeedbackButtonClicked:(id)sender;
 

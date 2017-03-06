@@ -24,20 +24,17 @@
 @end
 
 @implementation FeedcomQuerycomViewController
-@synthesize results;
-@synthesize searchController;
-@synthesize feedTypeSONoArray;
-@synthesize feedTypeSONoCopyForPredicate;
-@synthesize cerateNewFeedbackOrQueryButton;
-@synthesize window;
+@synthesize results,searchController,feedTypeSONoArray,cerateNewFeedbackOrQueryButton,window,feedTypeSONoCopyForPredicate;
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
     [[self navigationController] setNavigationBarHidden:NO animated:YES];
+    
     [self setSearchController];
-//    [[NSNotificationCenter defaultCenter] addObserver:self
-//                                             selector:@selector(reloadData) name:NOTIFICATION_UPDATE_TABLEVIEW
-//                                               object:nil];
+
+    //view update after noti data
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(reloadData) name:NOTIFICATION_NEW_DATA_UPDATE
                                                object:nil];
@@ -49,6 +46,7 @@
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(addFeedbackButton) name:NOTIFICATION_ADD_FEEDBACK_BUTTON
                                                object:nil];
+    
     refreshControl = [[UIRefreshControl alloc]init];
     refreshControl.tag=1000;
     [self.tableView addSubview:refreshControl];
@@ -59,55 +57,60 @@
 -(void)refreshTable
 {
     NSString* username = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
+    
     NSString* password = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentPassword"];
 
-    NSString* companyId=[[Database shareddatabase] getCompanyId:username];
-//    NSString* userFeedback=[[Database shareddatabase] getUserIdFromUserName:username];
+    //NSString* companyId=[[Database shareddatabase] getCompanyId:username];
+    
     NSString* userFrom,*userTo;
-    if ([companyId isEqual:@"1"])
-    {
-        userFrom= [[Database shareddatabase] getAdminUserId];
-        username=[[Database shareddatabase] getUserNameFromCompanyname:[[NSUserDefaults standardUserDefaults]valueForKey:@"selectedCompany"]];
-        userTo=[[Database shareddatabase] getUserIdFromUserNameWithRoll1:username];
-        
-    }
     
-    else
-    {
-        userTo=[[Database shareddatabase] getAdminUserId];
-        userFrom= [[Database shareddatabase] getUserIdFromUserNameWithRoll1:username];
-    }
+//    if ([companyId isEqual:@"1"])
+//    {
+//        userFrom= [[Database shareddatabase] getAdminUserId];
+//        
+//        username=[[Database shareddatabase] getUserNameFromCompanyname:[[NSUserDefaults standardUserDefaults]valueForKey:@"selectedCompany"]];
+//        
+//        userTo=[[Database shareddatabase] getUserIdFromUserNameWithRoll1:username];
+//        
+//    }
+//    else
+//    {
+//        userTo=[[Database shareddatabase] getAdminUserId];
+//        
+//        userFrom= [[Database shareddatabase] getUserIdFromUserNameWithRoll1:username];
+//    }
+     userFrom= [[NSUserDefaults standardUserDefaults] valueForKey:@"userFrom"];
     
-   NSMutableArray* feedbackIDsArray= [[Database shareddatabase] getFeedbackIDs:self.feedbackType userFrom:userFrom userTo:userTo];
-    NSMutableString* feedIdsString;
+     userTo=[[NSUserDefaults standardUserDefaults] valueForKey:@"userTo"];
     
-    if (feedbackIDsArray.count==0)
-    {
-        feedIdsString=[@"1" mutableCopy];
-    }
-    for (int i=0; i<feedbackIDsArray.count; i++)
-    {
+     NSMutableArray* feedbackIDsArray= [[Database shareddatabase] getFeedbackIDs:self.feedbackType userFrom:userFrom userTo:userTo];
+    
+     NSMutableString* feedIdsString;
+    
+     if (feedbackIDsArray.count==0)
+     {
+         feedIdsString=[@"1" mutableCopy];
+     }
+    
+     for (int i=0; i<feedbackIDsArray.count; i++)
+     {
         if (i==0)
         {
             feedIdsString=[feedbackIDsArray objectAtIndex:i];
         }
-//        else
-//            if (i==feedbackIDsArray.count-1)
-//            {
-//                feedIdsString=[NSMutableString stringWithFormat:@"%@%@",feedIdsString,[feedbackIDsArray objectAtIndex:i]];
-//            }
         else
         {
         feedIdsString=[NSMutableString stringWithFormat:@"%@,%@",feedIdsString,[feedbackIDsArray objectAtIndex:i]];
         }
-    }
-    NSString* username1 = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
+     }
+    
+     NSString* username1 = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
 
-  int feedbackType=  [[Database shareddatabase] getFeedbackIdFromFeedbackType:self.feedbackType];
-    [[APIManager sharedManager] getNew50Records:username1 password:password userFrom:userFrom userTo:userTo feedbackType:feedbackType feedbackIdsArray:feedIdsString];
-  // self.loading=false;
+     int feedbackType=  [[Database shareddatabase] getFeedbackIdFromFeedbackType:self.feedbackType];
+    
+     [[APIManager sharedManager] getNew50Records:username1 password:password userFrom:userFrom userTo:userTo feedbackType:feedbackType feedbackIdsArray:feedIdsString];
 
-    [self.tableView reloadData];
+     [self.tableView reloadData];
 }
 
 -(void)insertNewData:(NSNotification*)dict
@@ -138,16 +141,7 @@
     [self prepareForSearchBar];
     [self addFeedbackButton];
      [[Database shareddatabase] getInitiatedByClosedBy:[[NSUserDefaults standardUserDefaults] valueForKey:@"currentFeedbackType"]];
-       //[self.view bringSubviewToFront:addFeedbackButton];
 
-//    [[Database shareddatabase] setDatabaseToCompressAndShowTotalQueryOrFeedback:self.feedbackType];
-//    [self.tableView reloadData];
-//
-//    UIWindow *window2 = [[UIWindow alloc] initWithFrame:CGRectMake(self.view.bounds.size.width-60, self.view.bounds.size.height-100, 50, 50)];
-//    window2.backgroundColor = [UIColor redColor];
-//    window2.windowLevel = UIWindowLevelAlert;
-//    self.window = window2;
-//    [window2 makeKeyAndVisible];
 }
 
 - (void) viewWillDisappear:(BOOL)animated
@@ -180,32 +174,8 @@
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"BackArrow"] style:UIBarButtonItemStylePlain target:self action:@selector(popViewController)] ;
     self.navigationItem.rightBarButtonItem = nil;
     self.navigationItem.leftBarButtonItem.tintColor=[UIColor whiteColor];
-   // Database *db=[Database shareddatabase];
-    //NSString* username = [[NSUserDefaults standardUserDefaults] valueForKey:@"currentUser"];
-   // NSString* companyId=[db getCompanyId:username];
-//    if ([[[NSUserDefaults standardUserDefaults] valueForKey:@"flag"] isEqual:@"0"])
-//    {
+
         self.navigationItem.title = self.feedbackType;
-   // }
-//    
-//    if ([[[NSUserDefaults standardUserDefaults] valueForKey:@"flag"] isEqual:@"1"])
-//    {
-//        self.tabBarController.navigationItem.title = @"QueryCom";
-//    }
-//    
-//    if ([companyId isEqual:@"1"] && [[[NSUserDefaults standardUserDefaults] valueForKey:@"flag"] isEqual:@"0"])
-//    {
-//        [cerateNewFeedbackOrQueryButton setHidden:YES];
-//    }
-//    else
-//    {
-//        if (!([companyId isEqual:@"1"]) && [[[NSUserDefaults standardUserDefaults] valueForKey:@"flag"] isEqual:@"1"])
-//        {
-//            [cerateNewFeedbackOrQueryButton setHidden:YES];
-//        }
-//        else
-//        [cerateNewFeedbackOrQueryButton setHidden:NO];
-//    }
 
 }
 
@@ -251,8 +221,8 @@
         
         NSPredicate *predicate1 = [NSPredicate predicateWithFormat:@"soNumber CONTAINS [cd] %@", self.searchController.searchBar.text];
         NSPredicate *predicate2 = [NSPredicate predicateWithFormat:@"feedText CONTAINS [cd] %@", self.searchController.searchBar.text];
-
-        NSPredicate *mainPredicate = [NSCompoundPredicate orPredicateWithSubpredicates:@[predicate1, predicate2]];
+ NSPredicate *predicate3 = [NSPredicate predicateWithFormat:@"subject CONTAINS [cd] %@", self.searchController.searchBar.text];
+        NSPredicate *mainPredicate = [NSCompoundPredicate orPredicateWithSubpredicates:@[predicate1, predicate2,predicate3]];
 
         predicateResultArray =[feedTypeSONoCopyForPredicate filteredArrayUsingPredicate:mainPredicate];
         
@@ -279,13 +249,19 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-        
+    
         UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
         FeedOrQueryMessageHeader *headerObj1=[feedTypeSONoArray objectAtIndex:indexPath.row];
         NSString* soNumber= headerObj1.soNumber;
         NSArray* separatedSO=[soNumber componentsSeparatedByString:@"#@"];
         UILabel* soNoLabel=(UILabel*)[cell viewWithTag:12];
-        soNoLabel.text=[NSString stringWithFormat:@"SO No.%@ \nAvaya Id:%@ \nDocument Id:%@",[separatedSO objectAtIndex:0],[separatedSO objectAtIndex:1],[separatedSO objectAtIndex:2]];
+    UILabel* avayaIdLabel=(UILabel*)[cell viewWithTag:85];
+    UILabel* documentIdLabel=(UILabel*)[cell viewWithTag:86];
+    avayaIdLabel.text=[NSString stringWithFormat:@"Avaya Id:%@",[separatedSO objectAtIndex:1]];
+    documentIdLabel.text=[NSString stringWithFormat:@"Document Id:%@",[separatedSO objectAtIndex:2]];
+
+    soNoLabel.text=[NSString stringWithFormat:@"SO No.: %@",[separatedSO objectAtIndex:0]];
+//        soNoLabel.text=[NSString stringWithFormat:@"SO No.%@ \nAvaya Id:%@ \nDocument Id:%@",[separatedSO objectAtIndex:0],[separatedSO objectAtIndex:1],[separatedSO objectAtIndex:2]];
         UIWebView* feedTextWebView=(UIWebView*)[cell viewWithTag:15];
     //feedTextWebView.delegate=self;
     feedTextWebView.backgroundColor=[UIColor clearColor];
@@ -294,19 +270,19 @@
     feedTextWebView.scrollView.bounces = NO;
 //        NSString *feedBackString =  [self stringByStrippingHTML:headerObj1.feedText];
 //        feedbackLabel.text= feedBackString;
-        NSString *feedBackString =  [headerObj1.feedText stringByDecodingHTMLEntities];
+        NSString *feedBackString =  [headerObj1.subject stringByDecodingHTMLEntities];
         [feedTextWebView loadHTMLString:feedBackString baseURL:nil];
         NSArray *components1 = [headerObj1.feedDate componentsSeparatedByString:@"+"];
         NSArray* dateAndTimeArray= [components1[0] componentsSeparatedByString:@" "];
         UILabel* createdByLabel=(UILabel*)[cell viewWithTag:13];
     
     //createdByLabel.text= [[AppPreferences sharedAppPreferences].initatedByClosedByArray objectAtIndex:indexPath.row];
-        createdByLabel.text=    [NSString stringWithFormat:@"Initiated by: %@ %@",headerObj1.firstname,headerObj1.lastname];
+        createdByLabel.text=    [NSString stringWithFormat:@"Init by: %@ %@",headerObj1.firstname,headerObj1.lastname];
     
    
         UILabel* dateAndTimeLabel=(UILabel*)[cell viewWithTag:16];
     dateAndTimeLabel.numberOfLines=2;
-    dateAndTimeLabel.text=[NSString stringWithFormat:@"%@\n%@",dateAndTimeArray[0],dateAndTimeArray[1]];
+    dateAndTimeLabel.text=[NSString stringWithFormat:@"%@ %@",dateAndTimeArray[0],dateAndTimeArray[1]];
 
 
         UILabel* closedByLabel=(UILabel*)[cell viewWithTag:17];
@@ -317,22 +293,90 @@
     {
         imageView.image=NULL;
     }
-    UIImageView* readStatusImageView= [cell viewWithTag:211];
-    if (headerObj1.readStatus>1 || headerObj1.readStatus==1)
-    {
-//        UIImageView* starImageView=[[UIImageView alloc]initWithFrame:readStatusImageView.frame];
-//        starImageView.tag=212;
-        readStatusImageView.image=[UIImage imageNamed:@"Star"];
-        //[cell addSubview:starImageView];
-      //  NSLog(@"");
+//    UIImageView* readStatusImageView= [cell viewWithTag:211];
+//    if (headerObj1.readStatus>1 || headerObj1.readStatus==1)
+//    {
+////        UIImageView* starImageView=[[UIImageView alloc]initWithFrame:readStatusImageView.frame];
+////        starImageView.tag=212;
+//        readStatusImageView.image=[UIImage imageNamed:@"Star"];
+//        //[cell addSubview:starImageView];
+//      //  NSLog(@"");
+//
+//    }
+//    else
+//    {
+//        readStatusImageView.image=NULL;
+//
+//    }
 
+   // NSArray *components1 = [headerObj1.feedDate componentsSeparatedByString:@"+"];
+    //NSArray* dateAndTimeArray= [components1[0] componentsSeparatedByString:@" "];
+    
+    if (dateAndTimeArray.count>1)
+    {
+        dateAndTimeLabel.text=[NSString stringWithFormat:@"%@ %@",dateAndTimeArray[0],dateAndTimeArray[1]];
+        
+    }
+    
+    createdByLabel.text=[NSString stringWithFormat:@"Init. by: %@ %@",headerObj1.firstname,headerObj1.lastname];
+    
+    //to show is message came today?
+    NSString* todaysDateAndTime=  [[APIManager sharedManager] getDate];
+    
+    NSArray* todaysDateAndTimeArray=[todaysDateAndTime componentsSeparatedByString:@" "];
+    
+    NSString* todaysDate =[todaysDateAndTimeArray objectAtIndex:0];
+    
+    NSString* messageDate=dateAndTimeArray[0];
+    
+    //to show message came yesterday
+    
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd"];
+    
+    NSDate *dateFromString = [[NSDate alloc] init];
+    dateFromString = [dateFormatter dateFromString:todaysDate];
+    NSDate *dateFromString1 = [[NSDate alloc] init];
+    dateFromString1 = [dateFormatter dateFromString:messageDate];
+    
+    CGFloat minuteDifference = [dateFromString timeIntervalSinceDate:dateFromString1] / 60.0;
+    
+    if (minuteDifference>1439 && minuteDifference<2880)
+    {
+        dateAndTimeLabel.text=[NSString stringWithFormat:@"Yesterday %@",dateAndTimeArray[1]];
+        
+    }
+    
+    if (minuteDifference==0)
+    {
+        dateAndTimeLabel.text=[NSString stringWithFormat:@"Today %@",dateAndTimeArray[1]];
+    }
+    
+    UIView* circleReferenceview=[cell viewWithTag:500];
+    
+    UILabel* messageCountLabel=[circleReferenceview viewWithTag:501];
+    if (!circleReferenceview.isHidden)
+    {
+        [circleReferenceview setHidden:YES];
+    }
+    
+    if (headerObj1.readStatus>1 ||headerObj1.readStatus==1)
+    {
+        circleReferenceview.layer.cornerRadius = 18 / 2.0;
+        messageCountLabel.text=[NSString stringWithFormat:@"%d",headerObj1.readStatus];
+        
+        dateAndTimeLabel.textColor=[UIColor colorWithRed:52/255.0 green:175/255.0 blue:35/255.0 alpha:1];
+        circleReferenceview.backgroundColor=[UIColor colorWithRed:52/255.0 green:175/255.0 blue:35/255.0 alpha:1];
+        
+        [circleReferenceview setHidden:NO];
     }
     else
     {
-        readStatusImageView.image=NULL;
-
+        dateAndTimeLabel.textColor=[UIColor colorWithRed:102/255.0 green:102/255.0 blue:102/255.0 alpha:1];
     }
 
+    
+    
     if (headerObj1.statusId==2)
     {
        // closedByLabel.text=[NSString stringWithFormat:@"Closed by: %@ %@",headerObj1.firstname,headerObj1.lastname];
@@ -349,7 +393,7 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    return 130;
+    return 100;
     
 }
 

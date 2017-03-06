@@ -53,9 +53,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "841F6D151C9D4BEC0082F7BE"
-            BuildableName = "Communicator.app"
-            BlueprintName = "Communicator"
-            ReferencedContainer = "container:Communicator.xcodeproj">
+            BuildableName = "MTCommunicator.app"
+            BlueprintName = "MTCommunicator"
+            ReferencedContainer = "container:MTCommunicator.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -76,9 +76,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "841F6D151C9D4BEC0082F7BE"
-            BuildableName = "Communicator.app"
-            BlueprintName = "Communicator"
-            ReferencedContainer = "container:Communicator.xcodeproj">
+            BuildableName = "MTCommunicator.app"
+            BlueprintName = "MTCommunicator"
+            ReferencedContainer = "container:MTCommunicator.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>

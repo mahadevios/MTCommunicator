@@ -616,6 +616,10 @@
     {
       if (![[NSFileManager defaultManager] fileExistsAtPath:filePath])
             [[NSFileManager defaultManager] createDirectoryAtPath:filePath withIntermediateDirectories:NO attributes:nil error:&error]; //Create folder
+        hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+        hud.tag=123456;
+        hud.label.text = NSLocalizedString(@"Downloading..", @"HUD Loading title");
+
         [self startReceive:sender];
       
     }
@@ -651,7 +655,8 @@
     NSString* password = [FTPPassword stringByReplacingOccurrencesOfString:@"@"
                                                                 withString:@"%40"];
     
-    
+    downloadableAttachmentName = [downloadableAttachmentName stringByReplacingOccurrencesOfString:@" "
+                                                                withString:@"%20"];
     
     NSString* urlString=[NSString stringWithFormat:@"ftp://%@:%@%@%@%@",username,password,FTPHostName,FTPFilesFolderName,downloadableAttachmentName];
     
@@ -674,7 +679,19 @@
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
 didCompleteWithError:(nullable NSError *)error
 {
-    NSLog(@"errors %@",error.debugDescription);
+    NSLog(@"errors %@",error.localizedDescription);
+   
+    if (error!=NULL)
+    {
+        [[AppPreferences sharedAppPreferences] showAlertViewWithTitle:@"Download failed!" withMessage:@"Please try again" withCancelText:@"Cancel" withOkText:@"Ok" withAlertTag:1000];
+    }
+    
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        
+        UIView* view=[self.view viewWithTag:123456];
+        [view removeFromSuperview];
+           });
 }
 - (void)URLSession:(nonnull NSURLSession *)session task:(nonnull NSURLSessionTask *)task didReceiveChallenge:(nonnull NSURLAuthenticationChallenge *)challenge completionHandler:(nonnull void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * __nullable))completionHandler
 {
@@ -691,12 +708,15 @@ didCompleteWithError:(nullable NSError *)error
         folderName=@"Documents";
 
     NSData *data = [NSData dataWithContentsOfURL:location];
+    downloadableAttachmentName = [downloadableAttachmentName stringByReplacingOccurrencesOfString:@"%20"
+                                                                                       withString:@" "];
     NSString* destpath=[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%@/%@",folderName,downloadableAttachmentName]];
     
     [data writeToFile:destpath atomically:YES];
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.tableView reloadData];
-        [hud setHidden:YES];
+        //[hud setHidden:YES];
         //[self.progressView setHidden:YES];
         //[self.imageView setImage:[UIImage imageWithData:data]];
     });
@@ -709,17 +729,39 @@ didCompleteWithError:(nullable NSError *)error
 {
     float progress = (double)totalBytesWritten / (double)totalBytesExpectedToWrite;
     NSLog(@"progress %f",progress);
-    NSString* progressPercent= [NSString stringWithFormat:@"Downloading..%f",progress*100];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        
-        hud = [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
-        [hud hideAnimated:YES];
-        
-        hud.label.text = NSLocalizedString(progressPercent, @"HUD Loading title");
-        hud.minSize = CGSizeMake(150.f, 100.f);
-        //[self.progressView setProgress:progress];
-    });
-}
+
+    NSString* progressPercent= [NSString stringWithFormat:@"%f",progress*100];
+    
+    int progressPercentInInt=[progressPercent intValue];
+    
+    progressPercent=[NSString stringWithFormat:@"%d",progressPercentInInt];
+    
+    NSString* progressShow= [NSString stringWithFormat:@"Downloading..%@%%",progressPercent];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+       //     UIView* view=[self.view viewWithTag:123456];
+            
+//            if (![view viewWithTag:123456])
+//            {
+//                hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+//                hud.tag=123456;
+//                //[hud hideAnimated:YES];
+//                
+//               
+//                hud.minSize = CGSizeMake(150.f, 100.f);
+//            }
+             hud.label.text = NSLocalizedString(progressShow, @"HUD Loading title");
+            if ([progressPercent isEqual:@"100"])
+            {
+                UIView* view=[self.view viewWithTag:123456];
+                [view removeFromSuperview];
+            }
+            //[self.progressView setProgress:progress];
+        });
+
+   
+    }
 
 - (UIViewController *) documentInteractionControllerViewControllerForPreview: (UIDocumentInteractionController *) controller
 {
@@ -790,64 +832,64 @@ didCompleteWithError:(nullable NSError *)error
 
 
 
-- (NSData *)createBodyWithBoundary:(NSString *)boundary
-                        parameters:(NSDictionary *)parameters
-                             paths:(NSArray *)paths
-                         fieldName:(NSString *)fieldName
-{
-    NSMutableData *httpBody = [NSMutableData data];
-    
-    // add params (all params are strings)
-    
-    [parameters enumerateKeysAndObjectsUsingBlock:^(NSString *parameterKey, NSString *parameterValue, BOOL *stop) {
-        [httpBody appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
-        [httpBody appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n", parameterKey] dataUsingEncoding:NSUTF8StringEncoding]];
-        [httpBody appendData:[[NSString stringWithFormat:@"%@\r\n", parameterValue] dataUsingEncoding:NSUTF8StringEncoding]];
-    }];
-    
-    // add image data
-    
-    for (NSString *path in paths)
-    {
-        NSString *filename  = [path lastPathComponent];
-        NSData   *data      = [NSData dataWithContentsOfFile:path];
-        NSString *mimetype  = [self mimeTypeForPath:path];
-        
-        [httpBody appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
-        [httpBody appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\n", fieldName, filename] dataUsingEncoding:NSUTF8StringEncoding]];
-        [httpBody appendData:[[NSString stringWithFormat:@"Content-Type: %@\r\n\r\n", mimetype] dataUsingEncoding:NSUTF8StringEncoding]];
-        [httpBody appendData:data];
-        [httpBody appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
-    }
-    
-    [httpBody appendData:[[NSString stringWithFormat:@"--%@--\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
-    
-    return httpBody;
-}
-
-
-- (NSString *)mimeTypeForPath:(NSString *)path
-{
-    // get a mime type for an extension using MobileCoreServices.framework
-    
-    CFStringRef extension = (__bridge CFStringRef)[path pathExtension];
-    CFStringRef UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, extension, NULL);
-    assert(UTI != NULL);
-    
-    NSString *mimetype = CFBridgingRelease(UTTypeCopyPreferredTagWithClass(UTI, kUTTagClassMIMEType));
-    assert(mimetype != NULL);
-    
-    CFRelease(UTI);
-    
-    return mimetype;
-}
-
-
-- (NSString *)generateBoundaryString
-{
-    return [NSString stringWithFormat:@"Boundary-%@", [[NSUUID UUID] UUIDString]];
-}
-
+//- (NSData *)createBodyWithBoundary:(NSString *)boundary
+//                        parameters:(NSDictionary *)parameters
+//                             paths:(NSArray *)paths
+//                         fieldName:(NSString *)fieldName
+//{
+//    NSMutableData *httpBody = [NSMutableData data];
+//    
+//    // add params (all params are strings)
+//    
+//    [parameters enumerateKeysAndObjectsUsingBlock:^(NSString *parameterKey, NSString *parameterValue, BOOL *stop) {
+//        [httpBody appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+//        [httpBody appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n", parameterKey] dataUsingEncoding:NSUTF8StringEncoding]];
+//        [httpBody appendData:[[NSString stringWithFormat:@"%@\r\n", parameterValue] dataUsingEncoding:NSUTF8StringEncoding]];
+//    }];
+//    
+//    // add image data
+//    
+//    for (NSString *path in paths)
+//    {
+//        NSString *filename  = [path lastPathComponent];
+//        NSData   *data      = [NSData dataWithContentsOfFile:path];
+//        NSString *mimetype  = [self mimeTypeForPath:path];
+//        
+//        [httpBody appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+//        [httpBody appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\n", fieldName, filename] dataUsingEncoding:NSUTF8StringEncoding]];
+//        [httpBody appendData:[[NSString stringWithFormat:@"Content-Type: %@\r\n\r\n", mimetype] dataUsingEncoding:NSUTF8StringEncoding]];
+//        [httpBody appendData:data];
+//        [httpBody appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+//    }
+//    
+//    [httpBody appendData:[[NSString stringWithFormat:@"--%@--\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+//    
+//    return httpBody;
+//}
+//
+//
+//- (NSString *)mimeTypeForPath:(NSString *)path
+//{
+//    // get a mime type for an extension using MobileCoreServices.framework
+//    
+//    CFStringRef extension = (__bridge CFStringRef)[path pathExtension];
+//    CFStringRef UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, extension, NULL);
+//    assert(UTI != NULL);
+//    
+//    NSString *mimetype = CFBridgingRelease(UTTypeCopyPreferredTagWithClass(UTI, kUTTagClassMIMEType));
+//    assert(mimetype != NULL);
+//    
+//    CFRelease(UTI);
+//    
+//    return mimetype;
+//}
+//
+//
+//- (NSString *)generateBoundaryString
+//{
+//    return [NSString stringWithFormat:@"Boundary-%@", [[NSUUID UUID] UUIDString]];
+//}
+//
 
 
 -(void)setSelectedButton:(id)sender

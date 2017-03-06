@@ -83,8 +83,9 @@
         
         [tabViewControllers addObject:vc];
         
-        [tabViewControllers addObject:vc2];
         [tabViewControllers addObject:vc3];
+        [tabViewControllers addObject:vc2];
+
         [tabViewControllers addObject:vc1];
 
         [self setViewControllers:tabViewControllers];
@@ -96,8 +97,9 @@
         
         [tabViewControllers addObject:vc];
         
-        [tabViewControllers addObject:vc2];
         [tabViewControllers addObject:vc3];
+        [tabViewControllers addObject:vc2];
+
         [self setViewControllers:tabViewControllers];
         
         

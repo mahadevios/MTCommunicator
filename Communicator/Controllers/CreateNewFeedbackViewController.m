@@ -884,15 +884,9 @@
 
 - (IBAction)addAttendees:(id)sender
 {
-//    [self.tableView reloadData];
-//    [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"attendies"];
-//   // [dateTextField resignFirstResponder];
-//    [self.tableView setHidden:NO];
-//    self.scrollview.userInteractionEnabled = NO;
     
     [self addIds];
-    // self.scrollView.alpha = 0.3f;
-    //[self.view addSubview:popupTableView];
+ 
     
 }
 

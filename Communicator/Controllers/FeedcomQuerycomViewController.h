@@ -30,6 +30,7 @@
 @property (weak, nonatomic) IBOutlet UIButton *cerateNewFeedbackOrQueryButton;
 @property (strong, nonatomic) UIWindow *window;
 @property (nonatomic)BOOL loading;
+@property (weak, nonatomic) IBOutlet UILabel *avayaIdLAbel;
 - (IBAction)buttonClicked:(id)sender;
 -(void)popViewController;
 -(void)reloadData;
