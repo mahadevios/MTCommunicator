@@ -18,12 +18,13 @@
 
 //#define  BASE_URL_PATH      @"http://192.168.0.13:7070/coreflex/feedcom"                       //kuldeep
 
-//#define  BASE_URL_PATH                  @"http://192.168.3.75:9091/coreflex/feedcom"//   local
+#define  BASE_URL_PATH                  @"http://192.168.3.75:9091/coreflex/feedcom"//   local
 
 //#define HTTP_UPLOAD_PATH                @"http://localhost:9090/coreflex/resources/CfsFiles/"
 //#define HTTP_UPLOAD_PATH                @"http://115.249.195.23:8080/Xanadu_MT/resources/CfsFiles/"
 //http://115.249.195.23:8080/Communicator
-#define  BASE_URL_PATH                  @"http://115.249.195.23:8080/Communicator/feedcom"  //live server
+//#define  BASE_URL_PATH                  @"http://115.249.195.23:8080/Communicator/feedcom"  //live server
+//#define  BASE_URL_PATH                  @"http://mtcommunicator.com/Communicator/feedcom"  //live server
 
 //#define  BASE_URL_PATH                  @"http://192.168.3.170:8080/coreflex/feedcom"
 //#define HTTP_UPLOAD_PATH                @"http://192.168.3.170:8080/coreflex/resources/CfsFiles/"  //nikhil sir server
